@@ -42,3 +42,52 @@ tax:
   - What's an HSA?
   - What happens if I withdraw from my IRA early?
   - How much can I contribute to my 401(k) this year?
+
+# Follow-up questions (Story 4.4, AC 4): the right agent depends on the earlier turns.
+# Each has a short history; "agent" on an assistant turn is the agent that answered it.
+followups:
+  - history: [{role: user, content: "What is an ETF?"}, {role: assistant, agent: finance_qa, content: "An ETF is a fund that trades like a stock."}]
+    question: "What about bonds?"
+    expected: finance_qa
+  - history: [{role: user, content: "What is an ETF?"}, {role: assistant, agent: finance_qa, content: "An ETF is a fund that trades like a stock."}]
+    question: "How is VTI doing today?"
+    expected: market
+  - history: [{role: user, content: "How is VTI doing today?"}, {role: assistant, agent: market, content: "VTI is down 1% today."}]
+    question: "And over the last 3 months?"
+    expected: market
+  - history: [{role: user, content: "How is VTI doing today?"}, {role: assistant, agent: market, content: "VTI is down 1% today."}]
+    question: "By the way, what is an index fund?"
+    expected: finance_qa
+  - history: [{role: user, content: "How is VTI doing today?"}, {role: assistant, agent: market, content: "VTI is down 1% today."}]
+    question: "Is there any news about it?"
+    expected: news
+  - history: [{role: user, content: "I want $20,000 in 4 years and I keep my savings in a Roth IRA."}, {role: assistant, agent: goal_planning, content: "You would need to save about $309 a month."}]
+    question: "Would I owe taxes if I take it out early?"
+    expected: tax
+  - history: [{role: user, content: "I want to save for a house."}, {role: assistant, agent: goal_planning, content: "To work out a plan, I need how much you want to save, by when, and how much you've saved."}]
+    question: "I want $15,000 in 3 years and I have $2,000 saved."
+    expected: goal_planning
+  - history: [{role: user, content: "Roth or traditional IRA?"}, {role: assistant, agent: tax, content: "A Roth IRA is funded with after-tax money."}]
+    question: "How much should I save each month to have $50,000 in 10 years?"
+    expected: goal_planning
+  - history: [{role: user, content: "Roth or traditional IRA?"}, {role: assistant, agent: tax, content: "A Roth IRA is funded with after-tax money."}]
+    question: "Can you analyze my portfolio?"
+    expected: portfolio
+  - history: [{role: user, content: "Can you analyze my portfolio?"}, {role: assistant, agent: portfolio, content: "Your portfolio is well diversified."}]
+    question: "Why is diversification important?"
+    expected: finance_qa
+  - history: [{role: user, content: "What's in the financial news today?"}, {role: assistant, agent: news, content: "Stocks fell on inflation worries."}]
+    question: "How is Apple stock doing?"
+    expected: market
+  - history: [{role: user, content: "What is a Roth IRA?"}, {role: assistant, agent: finance_qa, content: "A Roth IRA is a retirement account."}]
+    question: "What are the tax rules for withdrawals?"
+    expected: tax
+  - history: [{role: user, content: "What's in the financial news today?"}, {role: assistant, agent: news, content: "Stocks fell on inflation worries."}]
+    question: "What is inflation?"
+    expected: finance_qa
+  - history: [{role: user, content: "How is my portfolio?"}, {role: assistant, agent: portfolio, content: "It is 60% stocks and 40% bonds."}]
+    question: "What is the S&P 500 doing today?"
+    expected: market
+  - history: [{role: user, content: "What is an HSA?"}, {role: assistant, agent: tax, content: "An HSA is a tax-advantaged account for medical costs."}]
+    question: "Can I contribute to one and a Roth IRA in the same year?"
+    expected: tax

@@ -7,7 +7,7 @@ import pytest
 
 from src.core.async_runner import AsyncRunner
 from src.core.models import AgentName, AgentRequest, AgentResponse
-from src.workflow.graph import COMING_SOON, EMPTY_INPUT, OFF_TOPIC_REPLY, UNAVAILABLE, FinnieWorkflow
+from src.workflow.graph import EMPTY_INPUT, OFF_TOPIC_REPLY, UNAVAILABLE, FinnieWorkflow
 from src.workflow.router import ROUTER_PROMPT, RouteDecision, Router
 
 DISCLAIMER = "Not personalized advice."
@@ -99,16 +99,12 @@ def test_off_topic_gets_a_polite_note():
     assert response.agent is None and response.answer == OFF_TOPIC_REPLY
 
 
-@pytest.mark.parametrize("name", [AgentName.GOAL_PLANNING, AgentName.NEWS, AgentName.TAX])
-def test_agents_not_built_yet_say_coming_soon(name):
+@pytest.mark.parametrize("name", list(AgentName))
+def test_an_agent_that_could_not_be_built_says_unavailable_never_coming_soon(name):
     flow, _, _ = workflow(name.value, agents={})
     response = ask(flow)
-    assert response.agent is name and response.answer.startswith(COMING_SOON[name])
-
-
-def test_missing_core_agent_says_unavailable():
-    flow, _, _ = workflow("finance_qa", agents={})
-    assert ask(flow).answer == UNAVAILABLE
+    assert response.agent is name and response.answer == UNAVAILABLE
+    assert "coming soon" not in response.answer.lower()
 
 
 @pytest.mark.parametrize("message, expected", [("   ", EMPTY_INPUT), ("x" * 51, "under 50 characters")])
