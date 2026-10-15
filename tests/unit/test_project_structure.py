@@ -18,6 +18,9 @@ def test_prescribed_folders_exist():
     assert (ROOT / "tests").is_dir()
     assert (ROOT / "scripts").is_dir()
     assert (ROOT / "scripts" / "benchmark.py").is_file()
+    assert (ROOT / "Dockerfile").is_file()
+    assert (ROOT / "docker-compose.yml").is_file()
+    assert (ROOT / ".dockerignore").is_file()
 
 
 def test_prescribed_files_exist():
