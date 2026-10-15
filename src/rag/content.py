@@ -9,13 +9,22 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+import re
+
 import yaml
 
 from src.core.categories import CATEGORIES, is_category
 
-ARTICLES_DIR = Path(__file__).resolve().parents[1] / "data" / "articles"
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+ARTICLES_DIR = DATA_DIR / "articles"
+GLOSSARY_PATH = DATA_DIR / "glossary.yaml"
 MIN_ARTICLES, MAX_ARTICLES = 50, 100
 REQUIRED_FIELDS = ("title", "category", "source_name", "source_url")
+MIN_GLOSSARY_TERMS = 50
+MAX_DEFINITION_SENTENCES = 3
+# Sentence ends: . ! or ? followed by a space or the end, but not after a single
+# capital letter, so abbreviations like "U.S." are not counted ("IRA." still is).
+_SENTENCE_END = re.compile(r"(?<!\b[A-Z])[.!?](?=\s|$)")
 
 
 class ContentError(Exception):
@@ -75,3 +84,61 @@ def load_articles(directory: Path = ARTICLES_DIR) -> list[Article]:
             f"expected {MIN_ARTICLES}-{MAX_ARTICLES} articles in {directory.name}/, found {len(paths)}"
         )
     return [parse_article(path) for path in paths]
+
+
+@dataclass(frozen=True)
+class GlossaryTerm:
+    term: str
+    definition: str
+    category: str
+    related_article: str | None = None
+
+    @property
+    def text(self) -> str:
+        """The text indexed for retrieval, as one chunk per term (architecture §8.2)."""
+        return f"{self.term}: {self.definition}"
+
+
+def count_sentences(text: str) -> int:
+    return len(_SENTENCE_END.findall(text.strip()))
+
+
+def load_glossary(
+    path: Path = GLOSSARY_PATH, articles_dir: Path = ARTICLES_DIR
+) -> list[GlossaryTerm]:
+    """Load and check the glossary. Raises ContentError on any problem."""
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError) as exc:
+        raise ContentError(f"{path.name}: cannot be read as YAML") from exc
+    entries = data.get("terms") if isinstance(data, dict) else None
+    if not isinstance(entries, list):
+        raise ContentError(f"{path.name}: expected a 'terms:' list")
+
+    slugs = {p.stem for p in articles_dir.glob("*.md")}
+    terms: list[GlossaryTerm] = []
+    seen: set[str] = set()
+    for entry in entries:
+        name = str(entry.get("term", "")).strip() if isinstance(entry, dict) else ""
+        if not name:
+            raise ContentError(f"{path.name}: an entry is missing its term")
+        where = f"{path.name}: {name!r}"
+        if name.lower() in seen:
+            raise ContentError(f"{where} appears more than once")
+        seen.add(name.lower())
+
+        definition = str(entry.get("definition") or "").strip()
+        sentences = count_sentences(definition)
+        if not 1 <= sentences <= MAX_DEFINITION_SENTENCES:
+            raise ContentError(f"{where} needs a 1-3 sentence definition, found {sentences}")
+        if not is_category(entry.get("category")):
+            raise ContentError(f"{where} has unknown category {entry.get('category')!r}")
+        related = entry.get("related_article")
+        if related is not None and related not in slugs:
+            raise ContentError(f"{where} links to missing article {related!r}")
+
+        terms.append(GlossaryTerm(name, definition, entry["category"], related))
+
+    if len(terms) < MIN_GLOSSARY_TERMS:
+        raise ContentError(f"{path.name}: expected at least {MIN_GLOSSARY_TERMS} terms, found {len(terms)}")
+    return terms
