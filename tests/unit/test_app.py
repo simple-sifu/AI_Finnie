@@ -187,3 +187,87 @@ def test_a_failing_runner_shows_a_friendly_message_and_the_chat_stays_usable(iso
     assert not app.exception and "Compound interest is interest on interest." in [m.value for m in app.markdown]
     # the failed exchange is not sent back to the models
     assert services.workflow.requests[1].history == []
+
+
+# --- Story 5.5: the session profile in the sidebar ---
+
+
+def profile_box(app, label):
+    return next(b for b in app.sidebar.selectbox if b.label == label)
+
+
+def test_sidebar_profile_defaults(isolated_env):
+    for name, value in KEYS.items():
+        isolated_env.setenv(name, value)
+    app = run_app()
+    assert profile_box(app, "Knowledge level").value == "Beginner"
+    assert profile_box(app, "Knowledge level").options == ["Beginner", "Intermediate"]
+    assert profile_box(app, "Risk tolerance").value is None  # no default
+    assert profile_box(app, "Risk tolerance").options == ["Conservative", "Moderate", "Aggressive"]
+    assert app.sidebar.text_input[0].value == ""
+
+
+def test_profile_choices_reach_the_workflow(isolated_env):
+    services = FakeServices()
+    isolated_env.setattr(factory, "build_services", lambda settings: services)
+    for name, value in KEYS.items():
+        isolated_env.setenv(name, value)
+    app = run_app()
+    profile_box(app, "Knowledge level").select("Intermediate").run()
+    profile_box(app, "Risk tolerance").select("Aggressive").run()
+    app.sidebar.text_input[0].input("a house in 5 years").run()
+    app.chat_input[0].set_value("What is a bond?").run()
+    profile = services.workflow.requests[0].profile
+    assert (profile.knowledge_level, profile.risk_tolerance, profile.goal_note) == ("intermediate", "aggressive", "a house in 5 years")
+
+
+def test_new_conversation_resets_the_profile_widgets(isolated_env):
+    for name, value in KEYS.items():
+        isolated_env.setenv(name, value)
+    app = run_app()
+    profile_box(app, "Risk tolerance").select("Moderate").run()
+    app.chat_input[0].set_value("hello").run()
+    sidebar_button(app, "New conversation").click().run()
+    sidebar_button(app, "Yes, start over").click().run()
+    assert profile_box(app, "Risk tolerance").value is None
+    assert profile_box(app, "Knowledge level").value == "Beginner" and app.sidebar.text_input[0].value == ""
+
+
+def test_agent_asks_for_risk_tolerance_and_the_chat_answer_fills_the_sidebar(isolated_env):
+    from src.agents.base import RISK_QUESTION
+
+    class AskingWorkflow(FakeWorkflow):
+        async def run(self, request):
+            self.requests.append(request)
+            if request.profile.risk_tolerance is None:
+                return AgentResponse(agent=AgentName.GOAL_PLANNING, answer=RISK_QUESTION, needs_input="risk_tolerance")
+            return AgentResponse(agent=AgentName.GOAL_PLANNING, answer=f"Plan for {request.profile.risk_tolerance}")
+
+    services = FakeServices()
+    services.workflow = AskingWorkflow()
+    isolated_env.setattr(factory, "build_services", lambda settings: services)
+    app = chatted_app(isolated_env, ("Plan my savings for a $20,000 goal",))
+    assert RISK_QUESTION in [m.value for m in app.markdown] and profile_box(app, "Risk tolerance").value is None
+
+    app.chat_input[0].set_value("moderate").run()
+    texts = [m.value for m in app.markdown]
+    assert "Plan for moderate" in texts  # the original question was answered with the new profile
+    assert profile_box(app, "Risk tolerance").value == "Moderate"  # and the sidebar shows it
+    first, second = services.workflow.requests
+    assert second.message == "Plan my savings for a $20,000 goal" and second.profile.risk_tolerance == "moderate"
+
+
+def test_unreadable_answer_to_the_risk_question_is_asked_again(isolated_env):
+    from src.agents.base import RISK_QUESTION
+    from src.workflow.conversation import RISK_REASK
+
+    class AskingWorkflow(FakeWorkflow):
+        async def run(self, request):
+            self.requests.append(request)
+            return AgentResponse(agent=AgentName.GOAL_PLANNING, answer=RISK_QUESTION, needs_input="risk_tolerance")
+
+    services = FakeServices()
+    services.workflow = AskingWorkflow()
+    isolated_env.setattr(factory, "build_services", lambda settings: services)
+    app = chatted_app(isolated_env, ("Plan my savings", "dunno"))
+    assert RISK_REASK in [m.value for m in app.markdown] and len(services.workflow.requests) == 1

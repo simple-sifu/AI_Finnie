@@ -41,6 +41,14 @@ Classifying your answer (response_type):
 - "uncertain": you aren't sure which applies, or the answer mixes both.
 """
 
+RISK_QUESTION = (
+    "To tailor this to you, how much risk are you comfortable with? "
+    "Conservative: you prefer stability and accept slower growth. "
+    "Moderate: a balance of growth and stability. "
+    "Aggressive: you accept big ups and downs for the chance of more growth. "
+    "You can answer here, or set it in the sidebar."
+)
+
 LEVEL_GUIDANCE = {
     "beginner": "The user is a beginner. Assume no prior financial knowledge.",
     "intermediate": "The user knows the basics. You can go a little deeper, but still explain less common terms.",
@@ -59,6 +67,7 @@ class LLMAnswer(BaseModel):
 class BaseAgent(ABC):
     name: ClassVar[AgentName]
     instructions: ClassVar[str]  # the agent's own job, added after the shared style rules
+    requires_risk_tolerance: ClassVar[bool] = False  # True: ask for it in the chat when it isn't set
 
     def __init__(self, llm: LLMClient, disclaimer_text: str):
         self.llm = llm
@@ -74,6 +83,8 @@ class BaseAgent(ABC):
 
     async def run(self, request: AgentRequest) -> AgentResponse:
         log_event(logger, "agent", agent=self.name.value)
+        if self.requires_risk_tolerance and request.profile.risk_tolerance is None:
+            return AgentResponse(agent=self.name, answer=RISK_QUESTION, needs_input="risk_tolerance")
         try:
             response = await self._run(request)
         except LLMUnavailableError:
