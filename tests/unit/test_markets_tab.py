@@ -324,3 +324,13 @@ def test_the_tab_explains_itself_when_services_are_missing(monkeypatch):
     monkeypatch.setattr(st, "info", lambda text, **k: messages.append(text))
     tab.render(None, None, None)
     assert messages == ["The markets overview isn't available right now. Please check the configuration message above."]
+
+
+def test_the_trend_chart_has_a_show_as_table_switch_with_the_same_data(env):
+    env()
+    app = run_app()
+    toggle = next(t for t in markets(app).toggle if t.key == "trend_SPY_table")
+    assert toggle.label == "Show as table" and not toggle.value and not markets(app).dataframe
+    toggle.set_value(True).run()
+    table = markets(app).dataframe[0].value
+    assert list(table.columns) == ["Date", "Closing price"] and len(table) == 63 and table["Closing price"].iloc[-1] == "$121.00"

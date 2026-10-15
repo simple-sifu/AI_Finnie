@@ -277,3 +277,17 @@ def test_the_tab_explains_when_the_services_are_not_available(tmp_path, monkeypa
     st.cache_resource.clear()
     app = run_app()
     assert not app.exception and not app.tabs  # a missing key stops the app before any tab renders
+
+
+def test_each_portfolio_chart_has_a_show_as_table_switch_with_the_same_data(env):
+    app = load(run_app())
+    toggles = {t.key: t for t in portfolio_tab(app).toggle}
+    assert set(toggles) == {"portfolio_pie_table", "portfolio_bar_table"} and not any(t.value for t in toggles.values())
+    tables_before = len(portfolio_tab(app).dataframe)  # the holdings table only
+    toggles["portfolio_pie_table"].set_value(True).run()
+    toggles["portfolio_bar_table"].set_value(True).run()
+    tables = [t.value for t in portfolio_tab(app).dataframe]
+    assert len(tables) == tables_before + 2
+    pie_table = next(t for t in tables if "Share of portfolio" in t.columns and "Holding" in t.columns)
+    bar_table = next(t for t in tables if "Type of investment" in t.columns)
+    assert list(pie_table["Holding"]) == ["VTI", "VXUS", "BND", "VNQ", "AAPL"] and "Stock funds" in list(bar_table["Type of investment"])

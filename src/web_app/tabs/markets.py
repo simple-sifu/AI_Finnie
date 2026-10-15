@@ -133,7 +133,7 @@ def explain(services, runner, symbol: str, timeout: float) -> AgentResponse:
 def render_selected(card: Card, services, runner, timeout: float) -> None:
     figure = charts.price_trend(card.symbol, card.points)
     if figure is not None:
-        st.plotly_chart(figure, width="stretch", key=f"trend_{card.symbol}")
+        components.chart_with_table(figure, charts.price_trend_table(card.points), f"trend_{card.symbol}")
     if card.label:
         components.freshness_label(card.label)
 

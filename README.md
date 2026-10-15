@@ -116,6 +116,14 @@ python -m src.rag.build_index    # no API keys needed; first run downloads a ~90
 
 A test fails if the content has changed without a rebuild.
 
+## Accessibility and design
+
+- Branded as **Finnie**, using Streamlit's default theme. There is no custom branding beyond the name.
+- **Color is never the only signal.** Data freshness labels use a word as well as a colored dot (Live, Cached, Sample data), price moves use an arrow and a sign (▲ +1.2%, ▼ -0.5%), and every value is printed on the charts.
+- Every chart has a title, labeled axes or a legend, and plain-language labels, and a **Show as table** switch that shows the same data as a table.
+- The layout works at laptop and tablet widths. On narrow screens the metric tiles and ticker cards wrap two to a row.
+- **No formal accessibility standard (such as WCAG) is targeted in v1**, and the app has not been audited against one.
+
 ## Sample data
 
 Sample portfolios for testing and the demo are in [`src/data/samples/`](src/data/samples/). Holdings files are CSVs with the columns `ticker`, `shares` and an optional `expense_ratio`, written as a percentage (`0.03` means 0.03%).

@@ -52,6 +52,28 @@ def sources_expander(sources: list[Source]) -> None:
             st.markdown(format_sources(sources))
 
 
+def chart_with_table(figure, table, key: str) -> None:
+    """A chart with a "Show as table" toggle that shows the same data, so no chart relies on color alone."""
+    st.plotly_chart(figure, width="stretch", key=key)
+    if st.toggle("Show as table", key=f"{key}_table"):
+        st.dataframe(table, hide_index=True, width="stretch")
+
+
+# On narrow screens, columns wrap two to a row instead of squeezing: the four portfolio metric tiles
+# become 2x2 and the five market cards 2+2+1 (front-end spec §7). Streamlit already stacks columns
+# fully on phones; this keeps tablets and small windows readable.
+RESPONSIVE_CSS = """
+@media (max-width: 900px) {
+  [data-testid="stHorizontalBlock"] { flex-wrap: wrap; }
+  [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] { flex: 1 1 calc(50% - 1rem); min-width: calc(50% - 1rem); }
+}
+"""
+
+
+def inject_responsive_css() -> None:
+    st.markdown(f"<style>{RESPONSIVE_CSS}</style>", unsafe_allow_html=True)
+
+
 def render_new_conversation(location: str) -> None:
     """The New conversation action, with its confirmation (front-end spec §6).
 
