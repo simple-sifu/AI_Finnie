@@ -360,7 +360,7 @@ async def retrieve(query: str, k: int = 4, categories: list[str] | None = None) 
 ```
 
 - Embedding and search run in `asyncio.to_thread`, because they are CPU-bound (D-17).
-- The search fetches `k × 5` candidates, filters them by category, then keeps the top `k`. With fewer than ~3,000 chunks, this is cheaper than a separate index per category (**NEW**).
+- With a category filter, the search scores every chunk, filters by category, then keeps the top `k`. With fewer than ~3,000 chunks this takes about a millisecond, never misses a small category, and is simpler than a separate index per category (**NEW**; changed in Story 6.5 from fetching `k × 5` candidates).
 - Chunks below `rag.min_score` are dropped (default 0.35 cosine, **NEW**; tuned with the retrieval test set in Story 6.3, AC 4). If none remain, the agent answers with the "no verified content" message.
 - Sources are deduplicated by article and attached to the response (Story 6.4).
 

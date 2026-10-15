@@ -73,9 +73,9 @@ def test_retrieve_is_async_and_runs_off_the_event_loop(retriever):
     seen = {}
     original = retriever.search
 
-    def spy(query, k=None):
+    def spy(query, k=None, categories=None):
         seen["thread"] = threading.current_thread()
-        return original(query, k)
+        return original(query, k, categories)
 
     retriever.search = spy
 
@@ -93,3 +93,52 @@ def test_warm_up_calls_the_embedder_once():
     r = Retriever(None, lambda texts: calls.append(texts) or np.zeros((1, 8), dtype="float32"))
     r.warm_up()
     assert calls == [["warm up"]]
+
+
+# Story 6.5: category filtering
+
+
+@pytest.fixture
+def mixed():
+    """Five chunks: alpha/beta/gamma are Stocks, delta/epsilon are Bonds."""
+    from src.rag.index import KnowledgeIndex
+
+    categories = ["Stocks", "Stocks", "Stocks", "Bonds", "Bonds"]
+    chunks = [Chunk(f"c{i}", t, "article", t, t, c, "S", "https://x/") for i, (t, c) in enumerate(zip(TEXTS, categories))]
+    knowledge = KnowledgeIndex(build_index(chunks, fake_embed), chunks, {})
+    return Retriever(knowledge, fake_embed, top_k=3, min_score=0.35)
+
+
+def test_unfiltered_search_covers_all_categories(mixed):
+    assert {r.chunk.slug for r in mixed.search("alpha+delta")} == {"alpha", "delta"}
+
+
+def test_filter_keeps_only_listed_categories(mixed):
+    assert [r.chunk.slug for r in mixed.search("alpha+delta", categories=["Bonds"])] == ["delta"]
+    assert {r.chunk.slug for r in mixed.search("alpha+delta", categories=["Stocks", "Bonds"])} == {"alpha", "delta"}
+
+
+def test_filter_finds_matches_outside_the_unfiltered_top_k(mixed):
+    mixed.top_k = 1  # unfiltered, only "alpha" would make the cut
+    assert [r.chunk.slug for r in mixed.search("alpha+delta", categories=["Bonds"])] == ["delta"]
+
+
+def test_filter_with_no_match_returns_empty(mixed):
+    assert mixed.search("alpha", categories=["Bonds"]) == []
+
+
+def test_a_single_category_string_is_accepted(mixed):
+    assert [r.chunk.slug for r in mixed.search("delta", categories="Bonds")] == ["delta"]
+
+
+@pytest.mark.parametrize("bad", [["Crypto"], ["Bonds", "bonds"], "Real Estate"])
+def test_unknown_category_raises_a_clear_error(mixed, bad):
+    from src.rag.retriever import UnknownCategoryError
+
+    with pytest.raises(UnknownCategoryError, match="Unknown category.*Use one of: Investing Basics"):
+        mixed.search("alpha", categories=bad)
+
+
+def test_async_retrieve_passes_the_filter(mixed):
+    results = asyncio.run(mixed.retrieve("alpha+delta", categories=["Bonds"]))
+    assert [r.chunk.slug for r in results] == ["delta"]

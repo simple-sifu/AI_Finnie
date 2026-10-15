@@ -38,3 +38,10 @@ def test_expected_article_is_in_top_k_for_at_least_80_percent(retriever):
 @pytest.mark.parametrize("question", EVAL["off_topic"])
 def test_off_topic_questions_find_nothing(retriever, question):
     assert retriever.search(question) == []
+
+
+def test_tax_filter_returns_only_retirement_and_tax_content(retriever):
+    """Story 6.5 example: the Tax Education Agent searches only its category."""
+    results = retriever.search("How are my investments taxed?", categories=["Retirement & Tax Accounts"])
+    assert results
+    assert {r.chunk.category for r in results} == {"Retirement & Tax Accounts"}
