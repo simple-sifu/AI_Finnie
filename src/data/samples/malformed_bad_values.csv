@@ -1,0 +1,5 @@
+ticker,shares,expense_ratio
+VTI,forty,0.03
+,10,0.05
+BND,-5,0.03
+AAPL,10,abc

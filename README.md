@@ -106,6 +106,18 @@ streamlit run src/web_app/app.py
 
 If a required key is missing, the app shows which one instead of starting. The tabs show placeholders until each feature is built.
 
+## Sample data
+
+Sample portfolios for testing and the demo are in [`src/data/samples/`](src/data/samples/). Holdings files are CSVs with the columns `ticker`, `shares` and an optional `expense_ratio`, written as a percentage (`0.03` means 0.03%).
+
+| File | What it shows |
+|---|---|
+| `diversified.csv` | A spread across US and international stock funds, bonds, real estate and one stock |
+| `concentrated.csv` | Most of the money in two individual stocks |
+| `missing_expense_ratios.csv` | Some funds without an expense ratio, to test the built-in fee table |
+| `malformed_missing_column.csv` | Error case: no `shares` column |
+| `malformed_bad_values.csv` | Error cases: a non-numeric share count, a missing ticker, negative shares and a non-numeric expense ratio |
+
 ## Project structure
 
 The repository root is the `ai_finance_assistant/` folder from the prescribed structure:
