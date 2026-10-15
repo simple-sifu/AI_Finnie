@@ -399,7 +399,7 @@ flowchart TD
 - **Burst limit (found 2026-10-15, Story 8.1):** besides 5 per minute and 25 per day, Alpha Vantage rejects free requests sent faster than about **1 per second**, with the message "Please consider spreading out your free API requests more sparingly (1 request per second)". The rate limiter (Story 8.3) spaces calls at least 1 second apart.
 - **Budgets:** a per-minute sliding window (5) and a daily counter (25), saved in `.cache/` so restarts don't reset them. The daily counter resets at midnight US Eastern time (**NEW** assumption; to be checked with the free-tier check in Story 8.1, AC 6).
 - **No waiting on the per-minute limit (NEW):** if the per-minute budget is used up, the request goes straight to the stale-cache and mock fallbacks rather than waiting up to 60 seconds. This keeps the UI responsive and inside the NFR13 targets. Example: a 10-holding portfolio on a cold cache gets 5 live prices, and the rest come from cache, sample data or "price unavailable", each clearly labeled. A **Refresh prices** button retries later.
-- **Retries:** tenacity with exponential backoff (1s, 2s, 4s; up to `market.max_retries`, default 3) for timeouts and 5xx errors only. Rate-limit notices are not retried.
+- **Retries:** exponential backoff (1s, 2s, 4s; up to `market.max_retries`, default 3) for timeouts, server errors and unexpected responses. Rate-limit notices are not retried. Each attempt reserves a request from the budget first, so this is a small loop in `MarketData` rather than tenacity (changed in Story 8.3; tenacity remains available for LLM retries).
 - **Labels:** `as_of` comes from `07. latest trading day` in the quote, and `fetched_at` is when Finnie got it (D-42).
 
 ### 9.2 News (SerpApi)

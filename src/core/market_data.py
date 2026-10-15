@@ -4,21 +4,30 @@ Free-tier freshness (checked 2026-10-15, Alpha Vantage support page): realtime
 and 15-minute delayed US data are premium-only, so free quotes are end-of-day
 data "as of" the latest trading day. Every Quote carries that date (D-42).
 
-`AlphaVantageClient` talks to the API and parses responses. `CachedMarketData`
-adds the disk cache (Story 8.2). Request limits and fallbacks (Story 8.3) and
-freshness labels (Story 8.4) are layered on top.
+`AlphaVantageClient` talks to the API and parses responses. `MarketData` adds
+the disk cache (Story 8.2), request budgets, retries and the fallback chain
+(Story 8.3). Every result says where its data came from, for freshness labels
+(Story 8.4).
 """
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import re
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timezone
+from enum import Enum
 from pathlib import Path
+from typing import Protocol
 
 import httpx
 
 from src.core.cache import DEFAULT_CACHE_DIR, DiskCache
+from src.core.rate_limit import RequestBudget, Sleep
+from src.utils.logging import get_logger, log_event
+
+logger = get_logger(__name__)
 
 BASE_URL = "https://www.alphavantage.co/query"
 _TICKER = re.compile(r"^[A-Z][A-Z.\-]{0,9}$")
@@ -160,16 +169,44 @@ class AlphaVantageClient:
         return PriceHistory(symbol, sorted(points, key=lambda p: p.day), _now())
 
 
-# --- Caching layer (Story 8.2) ---------------------------------------------
+# --- Cache, limits and fallbacks (Stories 8.2 and 8.3) -----------------------
+
+
+class DataSource(str, Enum):
+    LIVE = "live"  # fetched from Alpha Vantage just now
+    CACHE = "cache"  # from the cache, still within its TTL
+    STALE = "stale"  # from an expired cache entry, because live data was unavailable
+    SAMPLE = "sample"  # mock data (Story 8.6), the last resort before "unavailable"
+    UNAVAILABLE = "unavailable"  # nothing available at all
+
+
+@dataclass(frozen=True)
+class Unavailable:
+    """No live, cached or sample data. Shown as "price unavailable" (D-41)."""
+
+    symbol: str
+    message: str = "Price unavailable right now. Try again later."
 
 
 @dataclass(frozen=True)
 class MarketResult:
     """A market data answer plus where it came from, for freshness labels (Story 8.4)."""
 
-    value: Quote | PriceHistory | NotFound
-    fetched_at: datetime  # when the data was originally fetched from Alpha Vantage
-    from_cache: bool
+    value: Quote | PriceHistory | NotFound | Unavailable
+    fetched_at: datetime | None  # when the data was originally fetched; None if never
+    source: DataSource
+
+    @property
+    def from_cache(self) -> bool:
+        return self.source in (DataSource.CACHE, DataSource.STALE)
+
+
+class MockProvider(Protocol):
+    """Sample data for when nothing else is available (implemented in Story 8.6)."""
+
+    def quote(self, symbol: str) -> Quote | None: ...
+
+    def history(self, symbol: str) -> PriceHistory | None: ...
 
 
 def _quote_to_dict(q: Quote) -> dict:
@@ -210,27 +247,60 @@ def _decode(record: dict) -> Quote | PriceHistory | NotFound:
     return NotFound(data["symbol"])
 
 
-class CachedMarketData:
-    """Serves quotes and history from the disk cache while fresh, otherwise from the API.
+class MarketData:
+    """Market data with caching, request budgets, retries and fallbacks.
 
-    Quotes stay fresh for `quote_ttl_seconds` (30 minutes, NFR3) and daily history for
-    `history_ttl_seconds` (24 hours, D-41). "Not found" answers are cached too, so a
-    mistyped ticker doesn't use up requests.
+    Order for each request:
+    1. a fresh cache entry (no API call),
+    2. mock mode, if configured, goes straight to sample data,
+    3. a live call, if the budget allows, with retries for temporary failures,
+    4. otherwise a stale cache entry, then sample data, then "unavailable".
+
+    The user never sees a raw error; every failure and fallback is logged.
     """
 
-    def __init__(self, client: AlphaVantageClient, cache: DiskCache, quote_ttl_seconds: int, history_ttl_seconds: int):
+    def __init__(
+        self,
+        client: AlphaVantageClient,
+        cache: DiskCache,
+        budget: RequestBudget,
+        quote_ttl_seconds: int,
+        history_ttl_seconds: int,
+        max_retries: int = 3,
+        retry_base_seconds: float = 1.0,
+        mock: MockProvider | None = None,
+        mock_mode: bool = False,
+        sleep: Sleep = asyncio.sleep,
+    ):
         self.client = client
         self.cache = cache
+        self.budget = budget
         self.ttl = {"quote": quote_ttl_seconds, "history": history_ttl_seconds}
+        self.max_retries = max_retries
+        self.retry_base_seconds = retry_base_seconds
+        self.mock = mock
+        self.mock_mode = mock_mode
+        self.sleep = sleep
 
     @classmethod
-    def from_settings(cls, settings, cache_dir: Path | None = None) -> CachedMarketData:
-        cache = DiskCache(cache_dir or DEFAULT_CACHE_DIR, namespace="market")
+    def from_settings(cls, settings, cache_dir: Path | None = None, mock: MockProvider | None = None) -> MarketData:
+        directory = cache_dir or DEFAULT_CACHE_DIR
+        market = settings.market
+        budget = RequestBudget(
+            directory / "limits" / "alpha_vantage.json",
+            per_day=market.daily_limit,
+            per_minute=market.per_minute_limit,
+            min_interval_seconds=market.min_interval_seconds,
+        )
         return cls(
             AlphaVantageClient.from_settings(settings),
-            cache,
-            settings.market.quote_ttl_seconds,
-            settings.market.history_ttl_seconds,
+            DiskCache(directory, namespace="market"),
+            budget,
+            market.quote_ttl_seconds,
+            market.history_ttl_seconds,
+            max_retries=market.max_retries,
+            mock=mock,
+            mock_mode=market.mode == "mock",
         )
 
     async def get_quote(self, ticker: str) -> MarketResult:
@@ -242,11 +312,61 @@ class CachedMarketData:
     async def _get(self, kind: str, ticker: str, fetch) -> MarketResult:
         symbol = normalize_ticker(ticker)
         if symbol is None:
-            return MarketResult(NotFound((ticker or "").strip().upper()), self.cache.clock(), from_cache=False)
+            return MarketResult(NotFound((ticker or "").strip().upper()), None, DataSource.LIVE)
         key = f"{kind}:{symbol}"
+
         entry = self.cache.get_fresh(key)
         if entry is not None:
-            return MarketResult(_decode(entry.value), entry.fetched_at, from_cache=True)
-        value = await fetch(symbol)
+            log_event(logger, "cache", result="hit", key=key)
+            return MarketResult(_decode(entry.value), entry.fetched_at, DataSource.CACHE)
+        if self.mock_mode:
+            return self._fallback(kind, symbol, key, reason="mock_mode")
+
+        log_event(logger, "cache", result="miss", key=key)
+        try:
+            value = await self._fetch_with_retries(fetch, symbol)
+        except _BudgetExhausted:
+            return self._fallback(kind, symbol, key, reason="budget")
+        except RateLimitError as exc:
+            self.budget.note_rejection(str(exc))
+            return self._fallback(kind, symbol, key, reason="rate_limited")
+        except MarketDataError as exc:
+            return self._fallback(kind, symbol, key, reason="error", detail=str(exc))
+
         stored = self.cache.set(key, _encode(value), self.ttl[kind])
-        return MarketResult(value, stored.fetched_at, from_cache=False)
+        return MarketResult(value, stored.fetched_at, DataSource.LIVE)
+
+    async def _fetch_with_retries(self, fetch, symbol: str):
+        for attempt in range(self.max_retries + 1):
+            if not await self.budget.acquire():
+                raise _BudgetExhausted
+            try:
+                log_event(logger, "api_call", service="alpha_vantage", symbol=symbol, attempt=attempt + 1)
+                return await fetch(symbol)
+            except RateLimitError:
+                raise  # retrying a limit refusal only wastes requests
+            except MarketDataError as exc:
+                if attempt == self.max_retries:
+                    raise
+                delay = self.retry_base_seconds * 2**attempt
+                log_event(logger, "retry", level=logging.WARNING, symbol=symbol, delay_s=delay, detail=str(exc))
+                await self.sleep(delay)
+        raise AssertionError("unreachable")  # pragma: no cover
+
+    def _fallback(self, kind: str, symbol: str, key: str, reason: str, detail: str = "") -> MarketResult:
+        stale = None if reason == "mock_mode" else self.cache.get(key)
+        if stale is not None:
+            log_event(logger, "fallback", level=logging.WARNING, to="stale_cache", key=key, reason=reason, detail=detail)
+            return MarketResult(_decode(stale.value), stale.fetched_at, DataSource.STALE)
+        sample = None
+        if self.mock is not None:
+            sample = self.mock.quote(symbol) if kind == "quote" else self.mock.history(symbol)
+        if sample is not None:
+            log_event(logger, "fallback", level=logging.WARNING, to="sample", key=key, reason=reason, detail=detail)
+            return MarketResult(sample, None, DataSource.SAMPLE)
+        log_event(logger, "fallback", level=logging.WARNING, to="unavailable", key=key, reason=reason, detail=detail)
+        return MarketResult(Unavailable(symbol), None, DataSource.UNAVAILABLE)
+
+
+class _BudgetExhausted(Exception):
+    """Internal: the request budget is used up, so skip straight to fallbacks."""
