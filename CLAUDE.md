@@ -17,4 +17,6 @@ Every approved story or document is committed on its own new branch, pushed, and
 
 Only work the PM has approved is merged into `main`. Work still awaiting approval stays marked as draft in the document itself.
 
+When an **approved story** from `docs/prd.md` is **fully implemented**, the agent should **commit, push, open a PR, and merge to `main`** in the same session (see `.cursor/rules/approved-story-git.mdc`), unless the user asks to hold off.
+
 Never commit secrets: `.env` is in `.gitignore`; commit `.env.example` instead.

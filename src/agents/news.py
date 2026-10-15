@@ -34,15 +34,21 @@ For a specific company or fund, use its name plus "stock" (e.g. "Apple stock"). 
 
 
 class NewsQuery(BaseModel):
+    """Short search query derived from the user's news question."""
+
     query: str = Field(description="The news search query, 2 to 6 words.")
 
 
 class NewsSummary(LLMAnswer):
+    """Headline summary plus which items were used for citations."""
+
     relevant: bool = Field(description="False if the headlines don't actually address what the user asked.")
     used: list[int] = Field(description="The numbers of the headlines you used in your answer.")
 
 
 class NewsSource(Protocol):
+    """News search client with cache, limits and fallbacks."""
+
     async def search(self, query: str) -> NewsResult: ...
 
 
@@ -71,6 +77,8 @@ def cited_items(items: list[NewsItem], used: list[int]) -> list[NewsItem]:
 
 
 class NewsAgent(BaseAgent):
+    """Summarizes recent financial headlines with publisher citations."""
+
     name = AgentName.NEWS
     instructions = """Your job: summarize current financial news for a beginner, using ONLY the numbered headlines below.
 - Cover only the 3 or 4 most important stories, grouping related headlines together. Keep the news part under about 100 words, in short sentences or bullets.

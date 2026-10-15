@@ -44,12 +44,16 @@ def router_prompt(history: list[ChatTurn]) -> str:
 
 
 class RouteDecision(BaseModel):
+    """Structured router output: one route, confidence and optional clarifying question."""
+
     route: Route
     confidence: float = Field(ge=0, le=1)
     clarifying_question: str | None = Field(default=None, description="Only for route=clarify: one short question.")
 
 
 class Router:
+    """LLM-based classifier that sends each chat message to exactly one agent."""
+
     def __init__(self, llm, min_confidence: float = 0.5):
         self.llm = llm
         self.min_confidence = min_confidence

@@ -27,6 +27,8 @@ logger = get_logger(__name__)
 
 @dataclass
 class FinnieServices:
+    """Everything the Streamlit app needs: clients, agents and the chat workflow."""
+
     settings: object
     llm: LLMClient
     market: MarketData
@@ -37,6 +39,7 @@ class FinnieServices:
 
 
 def build_services(settings, cache_dir: Path | None = None) -> FinnieServices:
+    """Wire LLM, data clients, agents and the LangGraph workflow from settings."""
     llm = LLMClient.from_settings(settings)
     market = MarketData.from_settings(settings, cache_dir=cache_dir)
     news = NewsService.from_settings(settings, cache_dir=cache_dir)

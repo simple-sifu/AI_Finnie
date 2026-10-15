@@ -12,6 +12,8 @@ from src.core.models import AgentRequest, AgentResponse
 
 
 class FinnieState(TypedDict, total=False):
+    """Mutable state passed between LangGraph nodes for a single chat turn."""
+
     request: AgentRequest
     route: str | None
     confidence: float | None

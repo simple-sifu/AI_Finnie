@@ -42,6 +42,8 @@ UNAVAILABLE = "That part of Finnie isn't available right now. Please try again l
 
 
 class FinnieWorkflow:
+    """LangGraph graph: validate, route, run one agent, finalize with disclaimers and labels."""
+
     def __init__(
         self, router: Router, agents: dict[AgentName, BaseAgent], disclaimer_text: str,
         max_input_chars: int = 2000, timeout_s: float = 90,

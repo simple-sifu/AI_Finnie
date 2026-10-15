@@ -54,6 +54,8 @@ _NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
 
 
 class TaxAnswer(GroundedAnswer):
+    """Grounded tax answer; flags non-US questions the agent must decline."""
+
     non_us: bool = Field(default=False, description="True if the question is about another country's tax rules.")
 
 
@@ -113,6 +115,8 @@ def with_figure_year(answer: str, results: list[RetrievedChunk]) -> str:
 
 
 class TaxAgent(BaseAgent):
+    """US tax and retirement account education grounded in the knowledge base."""
+
     name = AgentName.TAX
     instructions = """Your job: explain US tax concepts and account types for beginners, such as the 401(k), traditional and Roth IRAs, HSAs, employer matches, early withdrawals and capital gains.
 Explain the idea first, then a short example. Finnie covers the United States only: if the question is about another country's taxes, set non_us to true.

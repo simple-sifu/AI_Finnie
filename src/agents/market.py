@@ -34,12 +34,16 @@ _EXPLICIT = re.compile(r"\$([A-Za-z][A-Za-z.\-]{0,9})\b|\b([A-Z]{1,5})\b")
 
 
 class QuoteSource(Protocol):
+    """Async quote and history access used by the market and portfolio agents."""
+
     async def get_quote(self, ticker: str) -> MarketResult: ...
 
     async def get_daily_history(self, ticker: str) -> MarketResult: ...
 
 
 class TickerRequest(BaseModel):
+    """Structured output when the router needs help finding ticker symbols in the question."""
+
     tickers: list[str] = Field(description="US ticker symbols the user asks about, e.g. AAPL for Apple. Empty if none.")
     overall_market: bool = Field(description="True if the user asks about the stock market in general.")
 
@@ -74,6 +78,8 @@ def describe(symbol: str, quote: Quote | None, quote_label: DataLabel | None, ch
 
 
 class MarketAgent(BaseAgent):
+    """Looks up quotes and trends, then explains them for beginners."""
+
     name = AgentName.MARKET
     instructions = """Your job: explain current prices and recent trends for the stocks and funds below.
 Use ONLY the numbers given; never calculate new ones or make up figures.

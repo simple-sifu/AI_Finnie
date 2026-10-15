@@ -69,6 +69,8 @@ ResponseType = Literal["advice", "education", "uncertain"]
 
 
 class AgentName(str, Enum):
+    """The six specialist agents Finnie can route a question to."""
+
     FINANCE_QA = "finance_qa"
     PORTFOLIO = "portfolio"
     MARKET = "market"
@@ -90,6 +92,8 @@ class AgentName(str, Enum):
 
 
 class ChatTurn(BaseModel):
+    """One message in the conversation history shown to agents and the UI."""
+
     role: Literal["user", "assistant"]
     content: str
     agent: AgentName | None = None
@@ -104,6 +108,8 @@ class SessionProfile(BaseModel):
 
 
 class AgentRequest(BaseModel):
+    """Everything an agent or the workflow needs for one user turn."""
+
     message: str
     history: list[ChatTurn] = Field(default_factory=list)
     profile: SessionProfile = Field(default_factory=SessionProfile)
@@ -111,6 +117,8 @@ class AgentRequest(BaseModel):
 
 
 class AgentResponse(BaseModel):
+    """Unified agent reply: text, sources, labels, disclaimer and optional structured data."""
+
     model_config = {"arbitrary_types_allowed": True}
 
     agent: AgentName | None  # None when Finnie itself answers (clarifying or off-topic)

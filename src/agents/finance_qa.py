@@ -17,6 +17,8 @@ FOLLOW_UP_WORDS = 6  # shorter questions are searched together with the previous
 
 
 class GroundedAnswer(LLMAnswer):
+    """Structured answer that states whether the knowledge base had enough content."""
+
     answered_from_content: bool = Field(
         description="True if the verified content below was enough to answer. False if it was not."
     )
@@ -53,6 +55,8 @@ def search_query(request: AgentRequest) -> str:
 
 
 class FinanceQAAgent(BaseAgent):
+    """Explains finance concepts using retrieved, cited knowledge-base passages."""
+
     name = AgentName.FINANCE_QA
     instructions = """Your job: answer general questions about personal finance and investing concepts,
 such as compound interest, stocks, bonds, funds, diversification and how markets work.
