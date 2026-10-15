@@ -158,6 +158,10 @@ class NewsService:
         if settings.news.provider != "serpapi":
             raise ConfigError("Only news.provider: serpapi is available in v1 (Tavily is optional and not built, D-14).")
         directory = cache_dir or DEFAULT_CACHE_DIR
+        if mock is None:
+            from src.core.mock_data import sample_news  # imported here to avoid a cycle
+
+            mock = sample_news()
         return cls(
             SerpApiClient(settings.secrets.serpapi_api_key.get_secret_value()),
             DiskCache(directory, namespace="news"),

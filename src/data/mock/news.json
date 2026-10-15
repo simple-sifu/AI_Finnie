@@ -1,0 +1,13 @@
+{
+  "_note": "Sample news for offline use and fallbacks (Story 8.6). Not real headlines; always labeled 'Sample data'. Links go to real Investor.gov explainers.",
+  "items": [
+    {"title": "Sample: Stocks slip as investors weigh new inflation data", "keywords": ["stock", "market", "inflation", "s&p"], "link": "https://www.investor.gov/introduction-investing/investing-basics/what-risk"},
+    {"title": "Sample: Bond prices move as traders watch interest rates", "keywords": ["bond", "rate", "interest", "treasury", "fed"], "link": "https://www.investor.gov/introduction-investing/investing-basics/investment-products/bonds-or-fixed-income-products/bonds"},
+    {"title": "Sample: Central bank keeps interest rates steady", "keywords": ["fed", "federal reserve", "rate", "interest", "inflation"], "link": "https://www.federalreserve.gov/monetarypolicy.htm"},
+    {"title": "Sample: Index funds keep drawing money from new investors", "keywords": ["index", "etf", "fund", "investor"], "link": "https://www.investor.gov/introduction-investing/investing-basics/investment-products/mutual-funds-and-exchange-traded-4"},
+    {"title": "Sample: Tech shares lead a volatile trading day", "keywords": ["tech", "stock", "nasdaq", "volatil"], "link": "https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work"},
+    {"title": "Sample: What a market correction means for long-term savers", "keywords": ["correction", "bear", "drop", "crash", "market"], "link": "https://www.investor.gov/introduction-investing/investing-basics/glossary/bear-market"},
+    {"title": "Sample: Workers boost 401(k) savings ahead of year end", "keywords": ["401", "retirement", "ira", "roth", "tax"], "link": "https://www.irs.gov/retirement-plans/401k-plans"},
+    {"title": "Sample: Companies report quarterly earnings this week", "keywords": ["earnings", "company", "stock", "profit"], "link": "https://www.investor.gov/introduction-investing/investing-basics/investment-products/stocks"}
+  ]
+}

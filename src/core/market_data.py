@@ -294,6 +294,10 @@ class MarketData:
             per_minute=market.per_minute_limit,
             min_interval_seconds=market.min_interval_seconds,
         )
+        if mock is None:
+            from src.core.mock_data import sample_market_data  # imported here to avoid a cycle
+
+            mock = sample_market_data()
         return cls(
             AlphaVantageClient.from_settings(settings),
             DiskCache(directory, namespace="market"),
