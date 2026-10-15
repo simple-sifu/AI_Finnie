@@ -15,6 +15,8 @@ from types import SimpleNamespace
 
 import pytest
 import respx
+import streamlit as st
+from streamlit.testing.v1 import AppTest
 
 from src.core.async_runner import AsyncRunner
 from src.core.config import load_settings
@@ -26,6 +28,8 @@ from src.workflow.conversation import Conversation, plan_turn
 from tests.integration.support import FakeAlphaVantage, FakeOpenAI, FakeSerpApi
 
 ROOT = Path(__file__).resolve().parents[2]
+APP = str(ROOT / "src" / "web_app" / "app.py")
+DIVERSIFIED_CSV = (ROOT / "src" / "data" / "samples" / "diversified.csv").read_bytes()
 KEYS = {"OPENAI_API_KEY": "sk-test-openai-123456", "ALPHA_VANTAGE_API_KEY": "av-test-key-123456", "SERPAPI_API_KEY": "serp-test-key-123456"}
 ALLOWED_SUFFIXES = ("huggingface.co", "hf.co", "cloudfront.net")  # where the embedding model comes from
 
@@ -124,3 +128,20 @@ def stack(tmp_path, monkeypatch, retriever):
         )
     runner.close()
     openai_server.close()
+
+
+@pytest.fixture
+def app(stack, monkeypatch):
+    """Streamlit AppTest wired to the integration `stack` (Story 9.2 dashboard tests, Story 9.3 UAT)."""
+    monkeypatch.setattr(factory, "build_services", lambda settings: stack.services)
+    st.cache_resource.clear()
+    running = AppTest.from_file(APP, default_timeout=60)
+    running.run()
+    yield running
+    st.cache_resource.clear()
+
+
+def upload_portfolio(app, data=DIVERSIFIED_CSV):
+    app.session_state["portfolio_input"] = ("mine.csv", data)
+    app.run()
+    return app
