@@ -118,6 +118,7 @@ RUN_LIVE_TESTS=1 pytest -m live -s                                        # long
 Both need the keys in your `.env`. A service that reports its daily limit as reached still counts as reachable in the smoke test.
 
 - **User acceptance (Story 9.3):** the PM script is in [`docs/uat-script.md`](docs/uat-script.md); record runs in [`docs/uat-results.md`](docs/uat-results.md). `pytest -k uat --cov-fail-under=0` checks the same demo scenarios offline (about 30 seconds).
+- **Performance (Story 9.4):** `python scripts/benchmark.py` measures NFR13 targets and updates [`docs/benchmarks.md`](docs/benchmarks.md) (about 10 seconds, offline fakes).
 
 ### Configuration
 
@@ -181,6 +182,7 @@ ai_finance_assistant/
 
 - [`docs/prd.md`](docs/prd.md): the product requirements document, including requirements, 10 epics with stories and acceptance criteria, and the log of all product decisions
 - [`docs/uat-script.md`](docs/uat-script.md) and [`docs/uat-results.md`](docs/uat-results.md): user acceptance script and recorded results (Story 9.3)
+- [`docs/benchmarks.md`](docs/benchmarks.md): NFR13 performance benchmark results (Story 9.4)
 - [`docs/sources/`](docs/sources/): the source documents the PRD was built from
 
 ## Roadmap
