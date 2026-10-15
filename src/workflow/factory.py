@@ -7,6 +7,7 @@ from pathlib import Path
 
 from src.agents.base import BaseAgent
 from src.agents.finance_qa import FinanceQAAgent
+from src.agents.goal_planning import GoalPlanningAgent
 from src.agents.market import MarketAgent
 from src.agents.portfolio import PortfolioAgent
 from src.core.llm import LLMClient
@@ -47,6 +48,7 @@ def build_services(settings, cache_dir: Path | None = None) -> FinnieServices:
     agents: dict[AgentName, BaseAgent] = {
         AgentName.PORTFOLIO: PortfolioAgent(llm, disclaimer, market, settings.portfolio.max_rows, settings.portfolio.max_file_mb),
         AgentName.MARKET: MarketAgent(llm, disclaimer, market),
+        AgentName.GOAL_PLANNING: GoalPlanningAgent(llm, disclaimer, settings.goals.annual_return),
     }
     if retriever is not None:
         agents[AgentName.FINANCE_QA] = FinanceQAAgent(llm, disclaimer, retriever)

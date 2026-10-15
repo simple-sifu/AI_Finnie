@@ -15,7 +15,9 @@ The LLM never does arithmetic; it only explains these results.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
+from datetime import date
 
 FUND_POSITIONS = 10
 RISK_WEIGHTS = {"cash": 1, "bond_fund": 2, "balanced_fund": 3, "stock_fund": 4, "individual_stock": 5}
@@ -154,3 +156,85 @@ def price_changes(closes: list[float]) -> dict[str, float | None]:
         else:
             changes[period] = None
     return changes
+
+
+# --- Goal planning (Story 4.1, architecture §11.3) ---------------------------
+
+MAX_GOAL_AMOUNT = 1_000_000_000
+MAX_GOAL_YEARS = 60
+LOWER_RETURN_GAP = 0.02  # "what if returns are 2 points lower" reminder that results are estimates
+DAYS_PER_MONTH = 30.4375
+
+
+@dataclass(frozen=True)
+class GoalPlan:
+    target_amount: float
+    current_savings: float
+    months: int
+    annual_return: float
+    required_monthly: float  # rounded up to the next cent; 0 if no monthly saving is needed
+    already_reached: bool  # current savings already meet the target
+    growth_alone_reaches: bool  # current savings, left to grow, reach the target without saving more
+    total_contributions: float  # required_monthly * months
+    end_balance: float  # projected balance at the end, following the plan
+    growth: float  # end_balance - current_savings - total_contributions
+    schedule: list[tuple[int, float]]  # (months from now, balance): month 0, each year end, the final month
+    required_monthly_if_lower: float  # the monthly saving if returns were LOWER_RETURN_GAP lower
+
+
+def monthly_rate(annual_return: float) -> float:
+    """Equivalent monthly rate: r = (1 + R)^(1/12) - 1."""
+    return (1 + annual_return) ** (1 / 12) - 1
+
+
+def balance_after(current: float, monthly: float, months: int, annual_return: float) -> float:
+    """Balance after `months`, saving `monthly` at the end of each month."""
+    r = monthly_rate(annual_return)
+    grown = current * (1 + r) ** months
+    if r == 0:
+        return current + monthly * months
+    return grown + monthly * ((1 + r) ** months - 1) / r
+
+
+def required_monthly_saving(target: float, current: float, months: int, annual_return: float) -> float:
+    """The monthly saving that reaches `target` in `months`, rounded up to the next cent."""
+    r = monthly_rate(annual_return)
+    grown = current * (1 + r) ** months
+    if grown >= target:
+        return 0.0
+    if r == 0:
+        needed = (target - current) / months
+    else:
+        needed = (target - grown) * r / ((1 + r) ** months - 1)
+    return math.ceil(round(needed * 100, 6)) / 100
+
+
+def months_until(target_date: date, today: date) -> int:
+    """Whole months from today to the target date (about 30.4 days each); at least 1 for a future date."""
+    if target_date <= today:
+        return 0
+    return max(1, round((target_date - today).days / DAYS_PER_MONTH))
+
+
+def plan_goal(target: float, current: float, months: int, annual_return: float) -> GoalPlan:
+    """Required monthly saving and a year-by-year projection. Inputs must already be valid."""
+    monthly = required_monthly_saving(target, current, months, annual_return)
+    checkpoints = [*range(0, months, 12), months]
+    schedule = [(m, round(balance_after(current, monthly, m, annual_return), 2)) for m in checkpoints]
+    end_balance = schedule[-1][1]
+    contributions = round(monthly * months, 2)
+    lower = max(0.0, annual_return - LOWER_RETURN_GAP)
+    return GoalPlan(
+        target_amount=target,
+        current_savings=current,
+        months=months,
+        annual_return=annual_return,
+        required_monthly=monthly,
+        already_reached=current >= target,
+        growth_alone_reaches=current < target and monthly == 0,
+        total_contributions=contributions,
+        end_balance=end_balance,
+        growth=round(end_balance - current - contributions, 2),
+        schedule=schedule,
+        required_monthly_if_lower=required_monthly_saving(target, current, months, lower),
+    )

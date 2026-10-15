@@ -105,3 +105,93 @@ def test_price_changes_with_short_history():
 
     assert price_changes([100.0, 101.0]) == {"1 week": None, "1 month": None, "3 months": None}
     assert price_changes([100.0] * 10 + [90.0])["1 week"] == -10.0
+
+
+# --- Story 4.1: goal planning, checked against known values and an independent simulation ---
+
+from datetime import date  # noqa: E402
+
+from src.core.calculators import (  # noqa: E402
+    balance_after,
+    monthly_rate,
+    months_until,
+    plan_goal,
+    required_monthly_saving,
+)
+
+
+def simulate(current, monthly, months, annual_return):
+    """Month by month, the slow way: grow, then add the deposit at the end of the month."""
+    r = (1 + annual_return) ** (1 / 12) - 1
+    balance = current
+    for _ in range(months):
+        balance = balance * (1 + r) + monthly
+    return balance
+
+
+def test_no_growth_is_plain_division():
+    assert required_monthly_saving(12000, 0, 12, 0.0) == 1000.00
+    assert required_monthly_saving(12000, 3000, 12, 0.0) == 750.00
+
+
+def test_known_value_ten_thousand_in_ten_years_at_six_percent():
+    # (1.06)^(1/12) - 1 = 0.0048675506; PMT = 10000 * r / (1.06^10 - 1) = 61.5471... -> 61.55
+    assert monthly_rate(0.06) == pytest.approx(0.0048675506, abs=1e-10)
+    assert required_monthly_saving(10000, 0, 120, 0.06) == 61.55
+
+
+@pytest.mark.parametrize(
+    "target, current, months, rate",
+    [(10000, 0, 120, 0.06), (20000, 5000, 48, 0.05), (1_000_000, 25000, 360, 0.07), (5000, 0, 6, 0.03), (50000, 1000, 1, 0.05)],
+)
+def test_saving_the_required_amount_really_reaches_the_target(target, current, months, rate):
+    monthly = required_monthly_saving(target, current, months, rate)
+    final = simulate(current, monthly, months, rate)
+    assert target <= final < target + monthly + 0.01  # reached, and by no more than one cent of rounding per deposit
+    assert balance_after(current, monthly, months, rate) == pytest.approx(final)
+
+
+def test_zero_when_current_savings_alone_reach_the_goal():
+    assert required_monthly_saving(10000, 10000, 24, 0.05) == 0.0  # already there
+    assert required_monthly_saving(10000, 9000, 120, 0.07) == 0.0  # 9000 * 1.07^10 = 17,704
+
+
+def test_plan_fields_for_a_typical_goal():
+    plan = plan_goal(20000, 5000, 48, 0.05)
+    assert plan.required_monthly == required_monthly_saving(20000, 5000, 48, 0.05)
+    assert plan.total_contributions == pytest.approx(plan.required_monthly * 48, abs=0.01)
+    assert plan.end_balance >= 20000 and plan.end_balance == pytest.approx(simulate(5000, plan.required_monthly, 48, 0.05), abs=0.01)
+    assert plan.growth == pytest.approx(plan.end_balance - 5000 - plan.total_contributions, abs=0.01)
+    assert not plan.already_reached and not plan.growth_alone_reaches
+
+
+def test_schedule_has_a_point_at_month_zero_each_year_end_and_the_final_month():
+    plan = plan_goal(20000, 5000, 30, 0.05)  # 2.5 years
+    assert [m for m, _ in plan.schedule] == [0, 12, 24, 30]
+    assert plan.schedule[0][1] == 5000
+    balances = [b for _, b in plan.schedule]
+    assert balances == sorted(balances) and balances[-1] == plan.end_balance
+    assert [m for m, _ in plan_goal(12000, 0, 24, 0.0).schedule] == [0, 12, 24]  # exact years: no duplicate end point
+
+
+def test_already_reached_and_growth_alone_statuses():
+    reached = plan_goal(10000, 12000, 24, 0.05)
+    assert reached.already_reached and reached.required_monthly == 0 and not reached.growth_alone_reaches
+    on_track = plan_goal(10000, 9000, 120, 0.07)
+    assert on_track.growth_alone_reaches and on_track.required_monthly == 0 and not on_track.already_reached
+    assert on_track.end_balance == pytest.approx(9000 * 1.07**10, abs=0.01)
+
+
+def test_lower_returns_need_a_higher_monthly_saving():
+    plan = plan_goal(20000, 5000, 120, 0.05)
+    assert plan.required_monthly_if_lower == required_monthly_saving(20000, 5000, 120, 0.03)
+    assert plan.required_monthly_if_lower > plan.required_monthly
+    assert plan_goal(20000, 0, 120, 0.01).required_monthly_if_lower == required_monthly_saving(20000, 0, 120, 0.0)  # never below 0%
+
+
+@pytest.mark.parametrize(
+    "target_date, months",
+    [(date(2030, 10, 15), 48), (date(2026, 11, 15), 1), (date(2026, 10, 16), 1), (date(2026, 10, 15), 0), (date(2025, 1, 1), 0), (date(2027, 10, 15), 12)],
+)
+def test_months_until(target_date, months):
+    assert months_until(target_date, date(2026, 10, 15)) == months
