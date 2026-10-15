@@ -48,3 +48,75 @@ def format_sources(sources: list[Source]) -> str:
         year = f" (as of {source.as_of})" if source.as_of else ""
         lines.append(f"- [{source.title}]({source.url}){year}, {source.source_name}")
     return "\n".join(lines)
+
+
+# --- Agent contracts (Story 3.1, architecture §5 and §7.1) -------------------
+
+from enum import Enum  # noqa: E402
+from typing import Any, Literal  # noqa: E402
+
+from pydantic import Field  # noqa: E402
+
+from src.core.freshness import DataLabel  # noqa: E402
+
+ResponseType = Literal["advice", "education", "uncertain"]
+
+
+class AgentName(str, Enum):
+    FINANCE_QA = "finance_qa"
+    PORTFOLIO = "portfolio"
+    MARKET = "market"
+    GOAL_PLANNING = "goal_planning"
+    NEWS = "news"
+    TAX = "tax"
+
+    @property
+    def display_name(self) -> str:
+        """The badge shown above each answer (front-end spec §3.4)."""
+        return {
+            "finance_qa": "Finance Q&A",
+            "portfolio": "Portfolio Analysis",
+            "market": "Market Analysis",
+            "goal_planning": "Goal Planning",
+            "news": "News",
+            "tax": "Tax Education",
+        }[self.value]
+
+
+class ChatTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+    agent: AgentName | None = None
+
+
+class SessionProfile(BaseModel):
+    """Session-only personalization (Story 5.5, D-15)."""
+
+    knowledge_level: Literal["beginner", "intermediate"] = "beginner"
+    risk_tolerance: Literal["conservative", "moderate", "aggressive"] | None = None
+    goal_note: str | None = None
+
+
+class AgentRequest(BaseModel):
+    message: str
+    history: list[ChatTurn] = Field(default_factory=list)
+    profile: SessionProfile = Field(default_factory=SessionProfile)
+    payload: dict[str, Any] | None = None  # tab input, e.g. parsed holdings or a goal form
+
+
+class AgentResponse(BaseModel):
+    model_config = {"arbitrary_types_allowed": True}
+
+    agent: AgentName
+    answer: str
+    response_type: ResponseType = "education"
+    sources: list[Source] = Field(default_factory=list)
+    labels: list[DataLabel] = Field(default_factory=list)
+    disclaimer: str | None = None  # set by the disclaimer policy, shown as a separate callout
+    needs_input: str | None = None  # e.g. "risk_tolerance"
+    data: dict[str, Any] | None = None  # structured results for the UI
+    error: bool = False  # True when this is a friendly failure message
+
+    @property
+    def is_advice(self) -> bool:
+        return self.response_type != "education"  # uncertain counts as advice (D-43)
