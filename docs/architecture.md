@@ -484,7 +484,7 @@ SERPAPI_API_KEY=
 TAVILY_API_KEY=        # optional (D-14)
 ```
 
-**`config.yaml`** (settings; environment variables override it):
+**`config.yaml`** (settings; environment variables override it). Cache times are in seconds, and mock mode is `market.mode`, to match the variable names already in use in `.env` (updated in Story 1.5):
 ```yaml
 llm:
   temperature: 0.2          # NEW: low, for consistent factual answers
@@ -503,15 +503,15 @@ rag:
   min_score: 0.35
 market:
   tickers: [SPY, QQQ, DIA, VTI, BND]   # NEW: broad US index funds as defaults (3-5, D-18)
-  quote_ttl_min: 30
-  history_ttl_hours: 24
+  quote_ttl_seconds: 1800     # QUOTE_CACHE_TTL_SECONDS
+  history_ttl_seconds: 86400
   daily_limit: 25
   per_minute_limit: 5
   max_retries: 3
-  mock_mode: false
+  mode: live                  # live | mock; MARKET_DATA_MODE
 news:
   provider: serpapi
-  ttl_hours: 6
+  ttl_seconds: 21600
   monthly_limit: 100
 goals:
   annual_return: {conservative: 0.03, moderate: 0.05, aggressive: 0.07}
