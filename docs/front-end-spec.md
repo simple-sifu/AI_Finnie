@@ -121,7 +121,7 @@ Freshness label(s) for any figures
 | Analyzing | A spinner over the metrics area |
 | Upload problems | A list of each problem (e.g. "Row 3: shares is not a number") and no analysis (Story 3.3, AC 1) |
 | File too large | "This file has more than 200 rows (or is over 1 MB). Please upload a smaller file." (NFR13) |
-| Some prices missing | Those rows show "price unavailable"; a note above the tiles says they are left out of totals (D-41) |
+| Some prices missing | Those rows show "price unavailable"; a note above the tiles says they are left out of totals (D-41). A **Refresh prices** button retries them later (architecture §9.1, added 2026-10-14) |
 | Expense ratio unknown | Shown as "unknown", never 0 (Story 2.5, AC 3) |
 
 ### 4.3 Markets tab (Stories 3.4, 7.3)
