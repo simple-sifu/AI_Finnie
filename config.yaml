@@ -40,7 +40,7 @@ news:
   monthly_limit: 100
 
 goals:
-  annual_return:              # architecture §11.3
+  annual_return:              # assumed growth per risk level; source and reasoning in architecture §11.3
     conservative: 0.03
     moderate: 0.05
     aggressive: 0.07

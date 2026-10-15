@@ -463,8 +463,23 @@ Only priced holdings count toward the totals (D-41). The weight of holding *i* i
 ### 11.3 Goal projection (Story 4.1)
 
 - Annual return R comes from the risk level, set in `config.yaml`.
-  - **Proposed defaults (NEW):** Conservative 3%, Moderate 5%, Aggressive 7%, nominal and before fees.
-  - These are illustrative planning assumptions. A source for them will be cited in this section during Story 4.1.
+  - **Defaults (approved in the PRD):** Conservative 3%, Moderate 5%, Aggressive 7% a year, nominal (before inflation, fees and taxes). They are set in `config.yaml` under `goals.annual_return` and can be changed there.
+  - **Source and reasoning (checked 2026-10-15, Story 4.1).** Source: Aswath Damodaran, NYU Stern, [Historical Returns on Stocks, Bonds and Bills: 1928–2025](https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html) (page updated January 5, 2026). The compound (geometric) annual returns below were calculated from that table's yearly figures:
+
+    | Investment, 1928–2025 | Compound annual return |
+    |---|---|
+    | S&P 500, dividends included | 10.0% |
+    | 10-year US Treasury bond | 4.5% |
+    | 3-month Treasury bill | 3.4% |
+
+    | Risk level | Rough mix it stands for | Historical return of that mix (approximate) | Assumed |
+    |---|---|---|---|
+    | Conservative | 20% stocks, 80% bonds | 5.6% | 3% |
+    | Moderate | 60% stocks, 40% bonds | 7.8% | 5% |
+    | Aggressive | 90% stocks, 10% bonds | 9.5% | 7% |
+
+    The assumed rates sit about 2.5 to 3 points **below** the long-run history of a matching mix. That margin is deliberate: it leaves room for fees and taxes and for the chance that future returns are lower than the past. These are illustrative planning assumptions, not forecasts, and past returns do not guarantee future results. The mixes are a rough guide to what each level means; Finnie doesn't tell the user to hold a particular mix.
+  - **Details:** the required monthly saving is rounded **up** to the next cent, so saving that amount really reaches the target. Months from a target date are `round(days / 30.4375)`, at least 1 for any future date. A goal can be up to $1,000,000,000 and up to 60 years away. The answer also gives the monthly saving if returns were 2 points lower, as a reminder that results are estimates. Every plan is advice, so it always carries the disclaimer (§7.4), whatever the LLM says.
 - Monthly rate: `r = (1 + R)^(1/12) − 1`. Months: `n`.
 - Growth of current savings: `FV₀ = PV × (1 + r)^n`.
 - Required monthly saving:
