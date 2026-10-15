@@ -221,5 +221,5 @@ def test_from_settings_wires_config(tmp_path):
     market = MarketData.from_settings(settings, cache_dir=tmp_path)
     assert market.mock_mode and market.ttl == {"quote": 1800, "history": 86400}
     assert market.budget.per_day == 25 and market.budget.per_minute == 5
-    assert market.budget.min_interval == timedelta(seconds=1)
+    assert market.budget.min_interval == timedelta(seconds=1.5)
     assert market.budget.state_file == tmp_path / "limits" / "alpha_vantage.json"

@@ -69,7 +69,7 @@ class MarketSettings(BaseModel):
     history_ttl_seconds: int = Field(86400, ge=0)
     daily_limit: int = Field(25, ge=0)
     per_minute_limit: int = Field(5, ge=0)
-    min_interval_seconds: float = Field(1.0, ge=0)  # Alpha Vantage burst limit (architecture §9.1)
+    min_interval_seconds: float = Field(1.5, ge=0)  # Alpha Vantage burst limit (architecture §9.1)
     max_retries: int = Field(3, ge=0)
 
     @field_validator("tickers")

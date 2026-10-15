@@ -335,7 +335,7 @@ class MarketData:
             return self._fallback(kind, symbol, key, reason="budget")
         except RateLimitError as exc:
             self.budget.note_rejection(str(exc))
-            return self._fallback(kind, symbol, key, reason="rate_limited")
+            return self._fallback(kind, symbol, key, reason="rate_limited", detail=str(exc)[:120])
         except MarketDataError as exc:
             return self._fallback(kind, symbol, key, reason="error", detail=str(exc))
 

@@ -85,3 +85,23 @@ def test_risk_mismatch():
     assert risk_mismatch("Moderate", "moderate") is None
     note = risk_mismatch("High", "conservative")
     assert "risk level is High" in note and "Conservative" in note
+
+
+# --- Story 3.4: market trends ---
+
+
+def test_price_changes_over_1_week_1_month_3_months():
+    from src.core.calculators import price_changes
+
+    closes = [100.0] * 30 + [110.0] * 33 + [120.0] * 4 + [125.0]  # 68 closes, last is today
+    changes = price_changes(closes)
+    assert changes["1 week"] == round((125 / 110 - 1) * 100, 2)  # 5 trading days ago
+    assert changes["1 month"] == round((125 / 110 - 1) * 100, 2)  # 21 trading days ago
+    assert changes["3 months"] == 25.0  # 63 trading days ago: 100 -> 125
+
+
+def test_price_changes_with_short_history():
+    from src.core.calculators import price_changes
+
+    assert price_changes([100.0, 101.0]) == {"1 week": None, "1 month": None, "3 months": None}
+    assert price_changes([100.0] * 10 + [90.0])["1 week"] == -10.0

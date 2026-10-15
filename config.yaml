@@ -30,7 +30,7 @@ market:
   history_ttl_seconds: 86400  # 24 hours (D-41)
   daily_limit: 25
   per_minute_limit: 5
-  min_interval_seconds: 1     # free tier rejects faster bursts (found in Story 8.1)
+  min_interval_seconds: 1.5   # free tier rejects bursts; 1.0 s still tripped it (Story 3.4)
   max_retries: 3
 
 news:
