@@ -107,12 +107,15 @@ pytest tests/unit          # just the unit tests: about 20 seconds, fully offlin
 
 - **Coverage:** `pytest` fails if line coverage drops below 80% (it is about 99%).
 - **Unit tests make no real API calls.** A guard in `tests/unit/conftest.py` watches every outside network connection and fails any test that tries one. They use mocks, sample data and fixed seeds, and they do not need your API keys or a `.env` file.
-- **Integration tests** (`tests/integration`) use the real embedding model and the real knowledge-base index, but still no paid API. The model is downloaded once (about 90 MB).
-- **Live tests** call OpenAI (a few cents at most) and are skipped unless you ask for them:
+- **Integration tests** (`tests/integration`, about 30 seconds) send questions through the whole real stack: the router, the agents, the real knowledge-base search with the real embedding model, the data clients, caches and request budgets, and the real OpenAI client. Only the outside services' answers are faked (a small fake OpenAI server on your machine, plus fake Alpha Vantage and SerpApi responses), so they cost nothing. They are offline by default: any attempt to reach a real service fails the test. The embedding model is downloaded once (about 90 MB).
+- **Optional live tests** call the real services and are skipped unless you ask for them:
 
 ```bash
-RUN_LIVE_TESTS=1 pytest -m live -s      # needs your .env keys
+RUN_LIVE_SMOKE=1 pytest -m live tests/integration/test_live_smoke.py -s   # one request to each service, 3 in all
+RUN_LIVE_TESTS=1 pytest -m live -s                                        # longer checks with the real model (a few cents)
 ```
+
+Both need the keys in your `.env`. A service that reports its daily limit as reached still counts as reachable in the smoke test.
 
 ### Configuration
 
