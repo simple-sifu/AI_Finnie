@@ -104,3 +104,9 @@ def test_unavailable_and_not_found_results():
 def test_label_defaults_to_the_current_time():
     result = MarketResult(QUOTE, datetime.now(timezone.utc) - timedelta(minutes=5), DataSource.CACHE)
     assert result.label().text.startswith("Cached · updated 5 min ago")
+
+
+def test_sample_label_wording_depends_on_what_is_sampled():
+    assert make_label(DataSource.SAMPLE, None, None, NOW).text == "Sample data · not real prices"
+    assert make_label(DataSource.SAMPLE, None, None, NOW, kind="headlines").text == "Sample data · not real headlines"
+    assert make_label(DataSource.LIVE, NOW, None, NOW, kind="headlines").text == "Live"  # kind only affects samples

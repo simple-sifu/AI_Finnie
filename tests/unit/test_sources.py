@@ -79,3 +79,13 @@ def test_real_retrieval_produces_real_citations(question, expected_title):
     assert expected_title in titles
     assert len(titles) == len(set(titles)), "each article listed once"
     assert all(s.url.startswith("https://www.irs.gov/") for s in sources)
+
+
+def test_news_sources_show_their_publication_date():
+    from datetime import date
+
+    news = Source(title="Fed holds rates", url="https://r/1", source_name="Reuters", category="News", published=date(2026, 10, 3))
+    year_based = Source(title="2026 limits", url="https://i/1", source_name="IRS.gov", category="Retirement & Tax Accounts", as_of=2026)
+    lines = format_sources([news, year_based]).splitlines()
+    assert lines[1] == "- [Fed holds rates](https://r/1) (Oct 3), Reuters"
+    assert lines[2] == "- [2026 limits](https://i/1) (as of 2026), IRS.gov"

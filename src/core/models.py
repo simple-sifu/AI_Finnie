@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import date
 
 from pydantic import BaseModel
 
@@ -17,6 +18,7 @@ class Source(BaseModel):
     source_name: str
     category: str
     as_of: int | None = None  # year for year-specific figures, e.g. 2026
+    published: date | None = None  # publication date of a news article (Story 4.2)
 
 
 def sources_from(retrieved: Iterable[RetrievedChunk]) -> list[Source]:
@@ -45,8 +47,12 @@ def format_sources(sources: list[Source]) -> str:
         return ""
     lines = ["**Sources**"]
     for source in sources:
-        year = f" (as of {source.as_of})" if source.as_of else ""
-        lines.append(f"- [{source.title}]({source.url}){year}, {source.source_name}")
+        when = ""
+        if source.published:
+            when = f" ({source.published:%b} {source.published.day})"
+        elif source.as_of:
+            when = f" (as of {source.as_of})"
+        lines.append(f"- [{source.title}]({source.url}){when}, {source.source_name}")
     return "\n".join(lines)
 
 
