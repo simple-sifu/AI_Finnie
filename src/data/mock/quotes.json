@@ -1,0 +1,18 @@
+{
+  "_note": "Sample data for offline use and fallbacks (Story 8.6). Not real prices; always labeled 'Sample data'.",
+  "as_of": "2026-10-14",
+  "quotes": {
+    "SPY": {"price": 770.00, "previous_close": 778.40, "volume": 61000000},
+    "QQQ": {"price": 729.00, "previous_close": 741.20, "volume": 38000000},
+    "DIA": {"price": 470.00, "previous_close": 473.10, "volume": 3200000},
+    "VTI": {"price": 377.00, "previous_close": 381.30, "volume": 3300000},
+    "BND": {"price": 74.20, "previous_close": 74.35, "volume": 6100000},
+    "VXUS": {"price": 72.50, "previous_close": 73.40, "volume": 4200000},
+    "VNQ": {"price": 92.80, "previous_close": 93.60, "volume": 3900000},
+    "VOO": {"price": 707.00, "previous_close": 714.80, "volume": 5400000},
+    "SCHB": {"price": 27.10, "previous_close": 27.40, "volume": 7600000},
+    "AAPL": {"price": 255.00, "previous_close": 258.90, "volume": 52000000},
+    "TSLA": {"price": 430.00, "previous_close": 441.50, "volume": 98000000},
+    "MSFT": {"price": 515.00, "previous_close": 519.80, "volume": 21000000}
+  }
+}
