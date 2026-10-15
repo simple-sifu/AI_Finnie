@@ -11,9 +11,9 @@ Results for the script in [`uat-script.md`](uat-script.md).
 |---|---|
 | **Run date** | 2026-10-15 |
 | **Tester** | PM (Tommy Han) |
-| **App version** | `main` after Story 9.2 merge |
+| **App version** | `main` (Epic 10 final polish, Story 10.4) |
 | **Environment** | Local Streamlit; `.env` with program API keys |
-| **Automated companion** | `pytest -k uat --cov-fail-under=0` — **Pass** (local run on 2026-10-15) |
+| **Automated companion** | `pytest -k uat --cov-fail-under=0` — **Pass** (2026-10-15; re-run in `./scripts/final_check.sh` for Story 10.4) |
 
 ## Summary
 
