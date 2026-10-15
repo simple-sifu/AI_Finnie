@@ -135,3 +135,22 @@ def calculate(positions: list[Position]) -> PortfolioMetrics:
         concentrated=concentrated,
         unpriced=unpriced,
     )
+
+
+# --- Market trends (Story 3.4, architecture §11.2) -------------------------
+
+TREND_PERIODS = {"1 week": 5, "1 month": 21, "3 months": 63}  # trading days
+
+
+def price_changes(closes: list[float]) -> dict[str, float | None]:
+    """Percent change over 1 week, 1 month and 3 months from daily closes (oldest first).
+
+    (close today / close n trading days ago - 1) * 100; None if the history is too short.
+    """
+    changes: dict[str, float | None] = {}
+    for period, days in TREND_PERIODS.items():
+        if len(closes) > days and closes[-1 - days] > 0:
+            changes[period] = round(float((closes[-1] / closes[-1 - days] - 1) * 100), 2)
+        else:
+            changes[period] = None
+    return changes
