@@ -19,6 +19,8 @@ _HEADING = re.compile(r"^## +(.+)$", re.MULTILINE)
 
 @dataclass(frozen=True)
 class Chunk:
+    """One searchable passage with the metadata needed for citations."""
+
     chunk_id: str
     text: str
     kind: str  # "article" or "glossary"

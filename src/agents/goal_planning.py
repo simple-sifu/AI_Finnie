@@ -41,6 +41,8 @@ _MISSING = {
 
 
 class GoalExtraction(BaseModel):
+    """Numbers the LLM extracts from a free-form savings goal message."""
+
     target_amount: float | None = Field(default=None, description="The amount to save, in US dollars. null if not given.")
     years: float | None = Field(default=None, description="How many years from now, e.g. 'in 4 years' = 4, 'in 18 months' = 1.5. null if the user gave a date or nothing.")
     target_date: str | None = Field(default=None, description="Only if the user named a specific date, month or year (YYYY-MM-DD; for just a year like 'by 2030' use December 31 of that year). null if they gave a number of years or nothing. Never use today's date as a placeholder.")
@@ -49,6 +51,8 @@ class GoalExtraction(BaseModel):
 
 @dataclass(frozen=True)
 class GoalInput:
+    """Validated goal fields ready for the monthly savings calculator."""
+
     target_amount: float
     current_savings: float
     months: int
@@ -133,6 +137,8 @@ def summarize(plan: GoalPlan, risk: str, today: date, goal_note: str | None) -> 
 
 
 class GoalPlanningAgent(BaseAgent):
+    """Plans monthly savings from target, timeline and risk tolerance."""
+
     name = AgentName.GOAL_PLANNING
     requires_risk_tolerance = True
     instructions = """Your job: explain the savings plan below in plain language.

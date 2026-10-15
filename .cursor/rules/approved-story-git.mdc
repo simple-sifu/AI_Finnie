@@ -1,0 +1,32 @@
+---
+description: Commit, push, and merge when an approved PRD story is finished
+alwaysApply: true
+---
+
+# Approved story → git workflow
+
+When you **finish implementing an approved story** from [`docs/prd.md`](docs/prd.md) (Epics 1–10), **do not stop at uncommitted local changes**. Complete the full git workflow in the same session unless the user explicitly says not to commit yet.
+
+“Approved” means the story is approved in the PRD (PM sign-off / D-40 epics) or the user treats the story as approved (e.g. “work on story 9.4”, “merge it like 9.2”).
+
+## Required steps (same as CLAUDE.md)
+
+1. `git checkout main && git pull`
+2. Branch: `story/<epic>.<story>-<short-slug>` (e.g. `story/10.1-documentation`)
+3. Commit with a clear message: `Story X.Y: <short description>`
+4. `git push -u origin <branch>`
+5. `gh pr create --base main` with Summary + Test plan
+6. `gh pr merge --merge`
+7. `git checkout main && git pull`
+
+Never commit directly to `main`. Never commit `.env` or secrets.
+
+## When to skip
+
+- User says **do not commit**, **draft only**, or **wait for PM approval**
+- Story work is **incomplete** or **blocked** (document what’s left instead of merging)
+- Only **questions or reviews** with no story implementation
+
+## After merge
+
+Tell the user the PR URL, merge commit on `main`, and what was included.

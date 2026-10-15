@@ -65,6 +65,8 @@ class LLMAnswer(BaseModel):
 
 
 class BaseAgent(ABC):
+    """Shared agent contract: structured LLM calls, disclaimers and friendly errors."""
+
     name: ClassVar[AgentName]
     instructions: ClassVar[str]  # the agent's own job, added after the shared style rules
     requires_risk_tolerance: ClassVar[bool] = False  # True: ask for it in the chat when it isn't set

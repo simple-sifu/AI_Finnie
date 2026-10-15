@@ -2,7 +2,7 @@
 title: Finnie — Architecture and Technical Design
 status: final
 created: 2026-10-14
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - docs/prd.md (v1.0)
   - docs/front-end-spec.md (final)

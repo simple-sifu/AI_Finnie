@@ -27,10 +27,14 @@ UPLOAD_PROMPT = (
 
 
 class QuoteSource(Protocol):
+    """Minimal market client interface for pricing uploaded holdings."""
+
     async def get_quote(self, ticker: str) -> MarketResult: ...
 
 
 class PortfolioExplanation(LLMAnswer):
+    """Structured portfolio narrative; flags whether the answer recommends a change."""
+
     includes_recommendation: bool = Field(
         description="True if the answer suggests any change or action for this portfolio."
     )
@@ -67,6 +71,8 @@ def summarize(metrics: PortfolioMetrics, rows: list[dict], notes: list[str]) -> 
 
 
 class PortfolioAgent(BaseAgent):
+    """Parses holdings CSVs, computes metrics in code and explains the results."""
+
     name = AgentName.PORTFOLIO
     instructions = """Your job: explain the user's portfolio analysis below.
 Use ONLY the numbers given; never calculate new ones or make up figures.

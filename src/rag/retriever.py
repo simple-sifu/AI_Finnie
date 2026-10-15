@@ -27,11 +27,15 @@ class UnknownCategoryError(ValueError):
 
 @dataclass(frozen=True)
 class RetrievedChunk:
+    """One chunk returned from search with its similarity score."""
+
     chunk: Chunk
     score: float  # cosine similarity, higher is more relevant
 
 
 class Retriever:
+    """Embed queries and search the FAISS index with optional category filters."""
+
     def __init__(self, knowledge: KnowledgeIndex, embed: Embedder, top_k: int = 4, min_score: float = 0.35):
         self.knowledge = knowledge
         self.embed = embed

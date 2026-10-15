@@ -38,6 +38,8 @@ class IndexLoadError(Exception):
 
 @dataclass
 class KnowledgeIndex:
+    """Loaded FAISS index, chunk list and build manifest."""
+
     index: faiss.Index
     chunks: list[Chunk]
     manifest: dict

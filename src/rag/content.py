@@ -33,6 +33,8 @@ class ContentError(Exception):
 
 @dataclass(frozen=True)
 class Article:
+    """One knowledge-base article loaded from Markdown front matter and body."""
+
     slug: str
     title: str
     category: str
@@ -88,6 +90,8 @@ def load_articles(directory: Path = ARTICLES_DIR) -> list[Article]:
 
 @dataclass(frozen=True)
 class GlossaryTerm:
+    """Glossary entry stored as its own chunk during indexing."""
+
     term: str
     definition: str
     category: str

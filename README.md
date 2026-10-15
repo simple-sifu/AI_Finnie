@@ -4,7 +4,7 @@
 
 Finnie is a multi-agent conversational tutor that helps beginners learn to invest. Six specialist agents work behind a single chat interface. They explain concepts in plain language, analyze an uploaded portfolio, look up market data, plan savings goals, summarize financial news and explain US tax-advantaged accounts.
 
-> **Status: in development.** Planning is complete (PRD, front-end spec and architecture are final). The project structure and test setup are in place; the app itself is being built epic by epic. Usage instructions will be added as features land.
+> **Status: v1 prototype ready for local evaluation.** All six agents, four tabs, tests and benchmarks are implemented. See [Usage examples](#usage-examples) to try Finnie after setup.
 
 > **Disclaimer:** Finnie is an educational project. Nothing it produces is professional financial or tax advice. Any advice-type response it gives will carry a disclaimer.
 
@@ -12,7 +12,7 @@ Finnie is a multi-agent conversational tutor that helps beginners learn to inves
 
 Most adults want to invest but are blocked by jargon, too many choices and fear of making mistakes. Human financial advisors are expensive and have account minimums. Generic robo-advisors push products without teaching the underlying concepts. As a result, many people leave money in low-yield savings accounts instead of building wealth.
 
-## What Finnie will do
+## What Finnie does
 
 ### Six specialist agents
 
@@ -67,6 +67,22 @@ Because these limits are tight, Finnie caches results (30 minutes for quotes, 24
 
 - **In scope:** all six agents, the four tabs, US markets and accounts only, local deployment, at least 80% test coverage.
 - **Out of scope:** user accounts or saved profiles (everything lasts for the session only), cloud hosting, the optional MCP server, and the Future Directions list in the PRD (for example, mobile apps, voice and automated investing).
+
+## Architecture overview
+
+Finnie is a **single Streamlit app** backed by a **LangGraph workflow** and **six agents**. The Chat tab sends each question through a router that picks one agent; Portfolio, Markets and Goals call agents directly because the tab already implies the task.
+
+```text
+User → Streamlit tabs → async runner → LangGraph (validate → route → agent → finalize)
+                                              ↓
+                         OpenAI (router + agent) · FAISS retrieval · Alpha Vantage · SerpApi
+```
+
+- **Session state only:** conversation history and profile live in the browser session (no database).
+- **Trust layer:** every path through the graph passes `finalize`, which applies disclaimers on advice and freshness labels on market/news figures.
+- **Resilience:** disk cache, request budgets and labeled sample data when APIs are down or over limit.
+
+Full diagrams, agent protocols, RAG details and NFR13 notes: [`docs/architecture.md`](docs/architecture.md). Technology rationale: [`docs/technology-choices.md`](docs/technology-choices.md).
 
 ## Development setup
 
@@ -126,7 +142,89 @@ Both need the keys in your `.env`. A service that reports its daily limit as rea
 - **Settings** are in `config.yaml`: model, cache times, tickers, limits and the disclaimer text.
 - **Overrides:** environment variables win over `config.yaml`. `OPENAI_MODEL`, `MARKET_DATA_MODE` (`live` or `mock`) and `QUOTE_CACHE_TTL_SECONDS` have their own names. Any other setting can be overridden with `FINNIE_<SECTION>__<KEY>`, for example `FINNIE_MARKET__DAILY_LIMIT=10`.
 
-If a required key is missing, the app shows which one instead of starting. The tabs show placeholders until each feature is built.
+If a required key is missing, the app shows which one instead of starting.
+
+## API and configuration
+
+### External APIs
+
+| API | Used for | Authentication | Notes |
+|---|---|---|---|
+| OpenAI Chat Completions | Router + all agents | `OPENAI_API_KEY` | Structured JSON outputs per agent; model from `OPENAI_MODEL` (default `gpt-4o-mini`) |
+| Alpha Vantage | Quotes and daily history | `ALPHA_VANTAGE_API_KEY` | `GLOBAL_QUOTE` and `TIME_SERIES_DAILY`; budgets in `config.yaml` `market:` |
+| SerpApi Google News | News headlines | `SERPAPI_API_KEY` | Default provider; set `news.provider: tavily` and `TAVILY_API_KEY` to switch |
+| Hugging Face (download only) | Embedding model for RAG | none for public model | First index build or test run downloads `all-MiniLM-L6-v2` (~90 MB) |
+
+Finnie does **not** expose its own HTTP API; evaluators run the Streamlit app locally.
+
+### Environment variables (`.env`)
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `OPENAI_API_KEY` | yes | LLM |
+| `ALPHA_VANTAGE_API_KEY` | yes | Market data |
+| `SERPAPI_API_KEY` | yes* | News (*unless using Tavily) |
+| `TAVILY_API_KEY` | if Tavily | Alternate news provider |
+| `OPENAI_MODEL` | no | Overrides `llm.model` in `config.yaml` |
+| `MARKET_DATA_MODE` | no | `live` (default) or `mock` for labeled sample prices |
+| `QUOTE_CACHE_TTL_SECONDS` | no | Quote cache TTL (default 1800) |
+| `FINNIE_<SECTION>__<KEY>` | no | Any `config.yaml` setting, e.g. `FINNIE_MARKET__DAILY_LIMIT=10` |
+
+See [`.env.example`](.env.example). Validate keys with `python -m src.core.config`.
+
+### Main `config.yaml` sections
+
+| Section | Controls |
+|---|---|
+| `llm` | Model, temperature, timeouts, retries |
+| `chat` | History length, input size, answer timeout |
+| `router` | Minimum routing confidence |
+| `rag` | Chunk size, top-k, minimum similarity score |
+| `market` / `news` | Tickers, cache TTLs, API budgets, provider |
+| `goals` | Assumed annual returns by risk level |
+| `portfolio` | Max upload rows (200) and file size (1 MB) |
+| `disclaimer` | Text shown on advice-type answers |
+
+## Usage examples
+
+After [setup](#development-setup), open **http://localhost:8501**.
+
+### Chat (multi-agent)
+
+Try these in order in one session to see routing and context:
+
+1. `What is an ETF?` → Finance Q&A with **Sources**
+2. `How is VTI doing?` → Market Analysis with a **Live** / **Cached** / **Sample data** label
+3. `I want $20,000 in 4 years for a house. I have $3,000 saved.` → Goal Planning asks for risk tolerance; answer **moderate** in the sidebar or chat
+4. Upload `src/data/samples/diversified.csv` with `Is my portfolio diversified?` → Portfolio Analysis
+
+The full PM script is in [`docs/uat-script.md`](docs/uat-script.md).
+
+### Portfolio tab
+
+Upload a CSV with columns `ticker`, `shares`, optional `expense_ratio`. Start with [`src/data/samples/diversified.csv`](src/data/samples/diversified.csv). Use **Refresh prices** if some rows show sample or stale data after an API limit.
+
+### Markets tab
+
+View configured tickers (default SPY, QQQ, DIA, VTI, BND) and use the lookup box for another symbol (for example `AAPL`).
+
+### Goals tab
+
+Enter a target amount, current savings, timeline and risk level to see a monthly savings estimate and chart (with disclaimer).
+
+## Troubleshooting
+
+| Problem | What to do |
+|---|---|
+| App says a key is missing | Copy `.env.example` → `.env` and fill in the three required keys; run `python -m src.core.config` |
+| `Configuration OK` fails | Check for typos in variable names; keys must not be empty strings |
+| Finance Q&A or Tax unavailable | Knowledge index missing or corrupt — run `python -m src.rag.build_index` |
+| Test fails on “index stale” | Content changed — rebuild the index (same command) |
+| Market/news shows **Sample data** | Expected when `MARKET_DATA_MODE=mock`, daily limit hit, or provider error; app stays usable |
+| Alpha Vantage limit during demo | Set `MARKET_DATA_MODE=mock` in `.env` and restart, or rely on cache from an earlier load |
+| Slow first chat answer | First run loads the embedding model; later turns are faster (see [`docs/benchmarks.md`](docs/benchmarks.md)) |
+| `pytest` fails on network | Unit/integration tests should stay offline; do not proxy-block localhost or Hugging Face on first run |
+| OpenAI errors in chat | Check key and quota; router retries then shows a friendly message (Story 5.3) |
 
 ### Knowledge base index
 
@@ -173,6 +271,8 @@ ai_finance_assistant/
 │   ├── utils/
 │   └── workflow/
 ├── tests/
+├── scripts/             # benchmark.py (NFR13)
+├── docs/
 ├── config.yaml
 ├── requirements.txt
 └── README.md
@@ -180,10 +280,13 @@ ai_finance_assistant/
 
 ## Documentation
 
-- [`docs/prd.md`](docs/prd.md): the product requirements document, including requirements, 10 epics with stories and acceptance criteria, and the log of all product decisions
-- [`docs/uat-script.md`](docs/uat-script.md) and [`docs/uat-results.md`](docs/uat-results.md): user acceptance script and recorded results (Story 9.3)
-- [`docs/benchmarks.md`](docs/benchmarks.md): NFR13 performance benchmark results (Story 9.4)
-- [`docs/sources/`](docs/sources/): the source documents the PRD was built from
+- [`docs/architecture.md`](docs/architecture.md): technical design — system overview, agent protocols, RAG, performance (Story 1.3 / 10.1)
+- [`docs/front-end-spec.md`](docs/front-end-spec.md): Streamlit UI specification
+- [`docs/technology-choices.md`](docs/technology-choices.md): why each major technology was chosen (Story 10.1)
+- [`docs/prd.md`](docs/prd.md): product requirements, epics and decision log
+- [`docs/uat-script.md`](docs/uat-script.md) and [`docs/uat-results.md`](docs/uat-results.md): user acceptance script and results (Story 9.3)
+- [`docs/benchmarks.md`](docs/benchmarks.md): NFR13 performance benchmarks (Story 9.4)
+- [`docs/sources/`](docs/sources/): source documents the PRD was built from
 
 ## Roadmap
 

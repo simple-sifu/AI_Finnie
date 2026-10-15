@@ -64,11 +64,15 @@ class PendingInput(BaseModel):
 
 @dataclass(frozen=True)
 class TurnPlan:
+    """What to send to the workflow this turn, or a reply that skips it."""
+
     message: str  # what to send to the workflow
     reply: AgentResponse | None = None  # a ready-made reply that skips the workflow
 
 
 class Conversation(BaseModel):
+    """In-memory chat history and profile for one Streamlit session."""
+
     model_config = {"arbitrary_types_allowed": True}
 
     exchanges: list[Exchange] = Field(default_factory=list)
