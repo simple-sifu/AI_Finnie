@@ -32,7 +32,7 @@ def test_an_uploaded_portfolio_becomes_metrics_charts_a_table_and_an_explanation
     assert list(table["Ticker"]) == ["VTI", "VXUS", "BND", "VNQ", "AAPL"]
     assert list(table["Price"]) == [f"${PRICES[t][1]:,.2f}" for t in table["Ticker"]]  # the prices the data client fetched
     assert set(table["Data"]) == {LIVE_LABEL}
-    assert "Your portfolio is worth $25,802.20." in [m.value for m in tab.markdown]
+    assert "Your portfolio is worth \\$25,802.20." in [m.value for m in tab.markdown]  # \$ so markdown shows the dollar sign as text
 
 
 def test_the_dashboard_tells_the_user_when_prices_are_not_live(app, stack):
