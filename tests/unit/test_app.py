@@ -122,3 +122,47 @@ def test_chat_history_is_kept_between_questions(isolated_env):
     app.chat_input[0].set_value("second question").run()
     texts = [m.value for m in app.markdown]
     assert texts.count("Compound interest is interest on interest.") == 2 and "first question" in texts
+
+
+def chatted_app(isolated_env, questions=("first question",)):
+    for name, value in KEYS.items():
+        isolated_env.setenv(name, value)
+    app = run_app()
+    for question in questions:
+        app.chat_input[0].set_value(question).run()
+    return app
+
+
+def sidebar_button(app, label):
+    return next(b for b in app.sidebar.button if b.label == label)
+
+
+def test_history_is_sent_with_each_question(isolated_env):
+    services = FakeServices()
+    isolated_env.setattr(factory, "build_services", lambda settings: services)
+    chatted_app(isolated_env, ("first question", "second question"))
+    first, second = services.workflow.requests
+    assert first.history == []
+    assert [t.content for t in second.history] == ["first question", "Compound interest is interest on interest."]
+
+
+def test_new_conversation_is_disabled_until_there_is_a_chat(isolated_env):
+    for name, value in KEYS.items():
+        isolated_env.setenv(name, value)
+    assert sidebar_button(run_app(), "New conversation").disabled
+
+
+def test_new_conversation_asks_first_then_clears_the_chat(isolated_env):
+    app = chatted_app(isolated_env)
+    sidebar_button(app, "New conversation").click().run()
+    assert any("Start a new conversation?" in w.value for w in app.sidebar.warning)
+    sidebar_button(app, "Yes, start over").click().run()
+    assert "first question" not in [m.value for m in app.markdown]
+    assert sidebar_button(app, "New conversation").disabled
+
+
+def test_cancel_keeps_the_chat(isolated_env):
+    app = chatted_app(isolated_env)
+    sidebar_button(app, "New conversation").click().run()
+    sidebar_button(app, "Cancel").click().run()
+    assert "first question" in [m.value for m in app.markdown]
