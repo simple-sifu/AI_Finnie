@@ -1,0 +1,16 @@
+ticker,name,asset_type,expense_ratio,as_of,source
+VTI,Vanguard Total Stock Market ETF,stock_fund,0.03,2026-10-09,Alpha Vantage ETF_PROFILE
+VOO,Vanguard S&P 500 ETF,stock_fund,0.03,2026-10-09,Alpha Vantage ETF_PROFILE
+SPY,SPDR S&P 500 ETF Trust,stock_fund,0.0945,2026-10-09,Alpha Vantage ETF_PROFILE
+QQQ,Invesco QQQ Trust,stock_fund,0.18,2026-10-09,Alpha Vantage ETF_PROFILE
+SCHB,Schwab U.S. Broad Market ETF,stock_fund,0.03,2026-10-09,Alpha Vantage ETF_PROFILE
+VXUS,Vanguard Total International Stock ETF,stock_fund,0.05,2026-10-09,Alpha Vantage ETF_PROFILE
+VEA,Vanguard FTSE Developed Markets ETF,stock_fund,0.03,2026-10-09,Alpha Vantage ETF_PROFILE
+VWO,Vanguard FTSE Emerging Markets ETF,stock_fund,0.06,2026-10-09,Alpha Vantage ETF_PROFILE
+SCHD,Schwab U.S. Dividend Equity ETF,stock_fund,0.06,2026-10-09,Alpha Vantage ETF_PROFILE
+VNQ,Vanguard Real Estate ETF,stock_fund,0.13,2026-10-09,Alpha Vantage ETF_PROFILE
+BND,Vanguard Total Bond Market ETF,bond_fund,0.03,2026-10-09,Alpha Vantage ETF_PROFILE
+AGG,iShares Core U.S. Aggregate Bond ETF,bond_fund,0.03,2026-10-09,Alpha Vantage ETF_PROFILE
+BNDX,Vanguard Total International Bond ETF,bond_fund,0.07,2026-10-09,Alpha Vantage ETF_PROFILE
+AOR,iShares balanced allocation ETF (about 60% stocks and 40% bonds),balanced_fund,0.15,2026-10-09,Alpha Vantage ETF_PROFILE
+SGOV,iShares 0-3 Month Treasury Bond ETF,cash,0.09,2026-10-09,Alpha Vantage ETF_PROFILE
