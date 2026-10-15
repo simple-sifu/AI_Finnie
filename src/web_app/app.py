@@ -1,5 +1,6 @@
 """Finnie Streamlit app (Story 1.7). Run with: streamlit run src/web_app/app.py"""
 
+import logging
 import sys
 from pathlib import Path
 
@@ -12,6 +13,7 @@ import streamlit as st  # noqa: E402
 
 from src import __version__  # noqa: E402
 from src.core.config import ConfigError, Settings, load_settings  # noqa: E402
+from src.rag.index import IndexLoadError, KnowledgeIndex, is_stale, load_index  # noqa: E402
 from src.utils.logging import get_logger, log_event, setup_logging_from_settings  # noqa: E402
 from src.web_app.tabs import chat, goals, markets, portfolio  # noqa: E402
 
@@ -34,6 +36,23 @@ def start_up() -> Settings:
     return settings
 
 
+@st.cache_resource
+def load_knowledge() -> KnowledgeIndex | None:
+    """Load the knowledge-base index once. Returns None, after logging why, if it can't load."""
+    try:
+        knowledge = load_index()
+    except IndexLoadError as exc:
+        log_event(logger, "error", level=logging.ERROR, kind="index_load", detail=str(exc))
+        return None
+    log_event(logger, "index_loaded", chunks=knowledge.size)
+    if is_stale(knowledge):
+        log_event(
+            logger, "index_stale", level=logging.WARNING,
+            detail="content changed since the index was built; run python -m src.rag.build_index",
+        )
+    return knowledge
+
+
 def render_sidebar() -> None:
     with st.sidebar:
         st.title("Finnie")
@@ -49,6 +68,12 @@ def main() -> None:
     except ConfigError as exc:
         st.error(f"Finnie can't start because of a configuration problem.\n\n{exc}")
         st.stop()
+
+    if load_knowledge() is None:
+        st.warning(
+            "Finnie's knowledge base isn't available right now, so answers can't cite "
+            "articles. Other features still work. (Details are in the log.)"
+        )
 
     render_sidebar()
     for tab, module in zip(st.tabs(list(TABS)), TABS.values()):

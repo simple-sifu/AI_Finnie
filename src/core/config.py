@@ -184,20 +184,26 @@ def _describe(error: ValidationError) -> str:
     return "Invalid settings: " + "; ".join(problems)
 
 
+def _load_data(
+    config_path: Path | None, env_file: Path | None, environ: dict[str, str] | None
+) -> tuple[dict[str, Any], dict[str, str]]:
+    config_path = config_path or PROJECT_ROOT / "config.yaml"
+    if environ is None:
+        load_dotenv(env_file or PROJECT_ROOT / ".env", override=False)
+        environ = dict(os.environ)
+    data = _read_yaml(config_path)
+    data.pop("secrets", None)  # keys may only come from the environment
+    _apply_env_overrides(data, environ)
+    return data, environ
+
+
 def load_settings(
     config_path: Path | None = None,
     env_file: Path | None = None,
     environ: dict[str, str] | None = None,
 ) -> Settings:
     """Load and validate settings. Raises ConfigError with a user-safe message."""
-    config_path = config_path or PROJECT_ROOT / "config.yaml"
-    if environ is None:
-        load_dotenv(env_file or PROJECT_ROOT / ".env", override=False)
-        environ = dict(os.environ)
-
-    data = _read_yaml(config_path)
-    data.pop("secrets", None)  # keys may only come from the environment
-    _apply_env_overrides(data, environ)
+    data, environ = _load_data(config_path, env_file, environ)
 
     provider = str((data.get("news") or {}).get("provider", "serpapi"))
     data["secrets"] = _read_secrets(environ, provider)
@@ -206,6 +212,19 @@ def load_settings(
         return Settings.model_validate(data)
     except ValidationError as exc:
         raise ConfigError(_describe(exc)) from None
+
+
+def load_rag_settings(
+    config_path: Path | None = None,
+    env_file: Path | None = None,
+    environ: dict[str, str] | None = None,
+) -> RAGSettings:
+    """Load only the rag: section. Used by the index build, which needs no API keys."""
+    data, _ = _load_data(config_path, env_file, environ)
+    try:
+        return RAGSettings.model_validate(data.get("rag") or {})
+    except ValidationError as exc:
+        raise ConfigError(_describe(exc).replace("Invalid settings: ", "Invalid settings: rag.")) from None
 
 
 def main() -> int:
