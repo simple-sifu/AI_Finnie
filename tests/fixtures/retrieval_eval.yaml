@@ -1,0 +1,65 @@
+# Retrieval test set (Story 6.3, AC 4): beginner questions and the article each
+# should find. A question passes if its expected article (or a glossary term
+# that cites it) is among the top-k results.
+
+questions:
+  - question: How does compound interest make my money grow?
+    expected: compound-interest
+  - question: How long does it take to double my money?
+    expected: rule-of-72
+  - question: Why do prices keep going up and how does that hurt my savings?
+    expected: inflation
+  - question: Should I invest a little every month or all at once?
+    expected: dollar-cost-averaging
+  - question: What do I own when I buy a share of a company?
+    expected: stocks-basics
+  - question: Why does a company pay dividends?
+    expected: dividends
+  - question: Is it risky to put most of my money in one stock?
+    expected: single-stock-risk
+  - question: How does a bond pay me back?
+    expected: bonds-basics
+  - question: Why do bond prices fall when interest rates rise?
+    expected: interest-rates-and-bond-prices
+  - question: Are municipal bonds tax free?
+    expected: municipal-bonds
+  - question: What's the difference between an ETF and a mutual fund?
+    expected: etfs-vs-mutual-funds
+  - question: What is an index fund and why are they cheap?
+    expected: index-funds
+  - question: What fee does a fund charge every year?
+    expected: expense-ratios
+  - question: How does a target date fund change over time?
+    expected: target-date-funds
+  - question: How does an employer 401k match work?
+    expected: employer-match
+  - question: Should I choose a Roth or a traditional account?
+    expected: traditional-vs-roth
+  - question: How much can I contribute to my 401k in 2026?
+    expected: contribution-limits-2026
+  - question: What happens if I take money out of my IRA before 59 and a half?
+    expected: early-withdrawals
+  - question: How are profits from selling stocks taxed?
+    expected: capital-gains-tax
+  - question: Why should I spread my money across different investments?
+    expected: diversification
+  - question: How do I decide how much to put in stocks versus bonds?
+    expected: asset-allocation
+  - question: What does it mean to rebalance my portfolio?
+    expected: rebalancing
+  - question: How much money should I keep for emergencies?
+    expected: emergency-fund
+  - question: Should I pay off my credit card before investing?
+    expected: high-interest-debt-first
+  - question: What's the difference between a market order and a limit order?
+    expected: order-types
+  - question: What is a bear market?
+    expected: bull-and-bear-markets
+
+# Questions Finnie's knowledge base does not cover. Ideally nothing passes the
+# relevance threshold, so the agent says it has no verified content.
+off_topic:
+  - What's the weather like in Paris tomorrow?
+  - Give me a recipe for chocolate chip cookies.
+  - Who won the World Cup in 2018?
+  - How do I fix a flat bicycle tire?
