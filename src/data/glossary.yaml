@@ -1,0 +1,400 @@
+# Finnie glossary (Story 2.3).
+# Each entry: term, a 1-3 sentence plain-language definition, a category from
+# src/core/categories.py, and related_article (an article slug) where one exists.
+
+terms:
+  # Investing Basics
+  - term: Asset
+    definition: Anything of value you own, such as cash, stocks, bonds or a home.
+    category: Investing Basics
+    related_article: what-is-investing
+  - term: Principal
+    definition: The original amount of money you invest or deposit, not counting any earnings.
+    category: Investing Basics
+    related_article: what-is-investing
+  - term: Return
+    definition: What an investment earns or loses over time, including price changes and income such as dividends or interest. It is often shown as a percentage.
+    category: Investing Basics
+    related_article: risk-and-return
+  - term: Risk
+    definition: The chance that an investment loses value or earns less than you expected. Investments with higher potential returns usually carry more risk.
+    category: Investing Basics
+    related_article: risk-and-return
+  - term: Compound interest
+    definition: Earning returns on both your original money and the returns it has already earned. Over many years, this "interest on interest" can greatly increase your savings.
+    category: Investing Basics
+    related_article: compound-interest
+  - term: Rule of 72
+    definition: A shortcut for estimating how many years it takes money to double. Divide 72 by the yearly growth rate; at 8%, money doubles in about 9 years.
+    category: Investing Basics
+    related_article: rule-of-72
+  - term: Inflation
+    definition: The general rise in prices over time, which means each dollar buys a little less. Investments need to grow faster than inflation to increase your buying power.
+    category: Investing Basics
+    related_article: inflation
+  - term: Liquidity
+    definition: How quickly and easily you can turn an investment into cash without losing value. A savings account is very liquid; a house is not.
+    category: Investing Basics
+    related_article: risk-and-return
+  - term: Time horizon
+    definition: How long you plan to keep money invested before you need it. Longer time horizons usually allow for more risk.
+    category: Investing Basics
+    related_article: time-horizon
+  - term: Dollar-cost averaging
+    definition: Investing a fixed amount on a regular schedule, no matter what prices are doing. You buy more shares when prices are low and fewer when they are high.
+    category: Investing Basics
+    related_article: dollar-cost-averaging
+  - term: Brokerage account
+    definition: An account at a brokerage firm that lets you buy, hold and sell investments such as stocks, bonds and funds.
+    category: Investing Basics
+    related_article: investment-accounts
+  - term: Advisory fee
+    definition: What you pay an investment adviser for managing your money or giving advice, often a percentage of your account each year.
+    category: Investing Basics
+    related_article: understanding-fees
+  - term: Security
+    definition: A tradable financial investment, such as a stock, bond or fund share.
+    category: Investing Basics
+    related_article: questions-before-investing
+
+  # Stocks
+  - term: Stock
+    definition: A share of ownership in a company. Stockholders can gain if the company's value rises and may receive dividends.
+    category: Stocks
+    related_article: stocks-basics
+  - term: Shareholder
+    definition: A person or organization that owns shares of a company's stock.
+    category: Stocks
+    related_article: stocks-basics
+  - term: Dividend
+    definition: A payment a company makes to its shareholders, usually from profits and often every quarter. Not all companies pay dividends, and they can be cut at any time.
+    category: Stocks
+    related_article: dividends
+  - term: Dividend yield
+    definition: A stock's yearly dividend divided by its price, shown as a percentage. A $100 stock paying $3 a year has a 3% dividend yield.
+    category: Stocks
+    related_article: dividends
+  - term: Market capitalization
+    definition: The total value of a company's shares, found by multiplying the share price by the number of shares. It is often shortened to "market cap."
+    category: Stocks
+    related_article: market-capitalization
+  - term: Large-cap
+    definition: A company with a large market capitalization, commonly over about $10 billion. Large-cap stocks tend to be more established and stable.
+    category: Stocks
+    related_article: market-capitalization
+  - term: Small-cap
+    definition: A company with a small market capitalization, commonly under about $2 billion. Small-cap stocks can grow faster but tend to swing more in price.
+    category: Stocks
+    related_article: market-capitalization
+  - term: Growth stock
+    definition: A stock in a company expected to grow sales and profits faster than average. These companies often reinvest profits instead of paying dividends.
+    category: Stocks
+    related_article: growth-vs-value-stocks
+  - term: Value stock
+    definition: A stock that looks inexpensive compared with measures like the company's earnings or assets. Value stocks are often established companies that pay dividends.
+    category: Stocks
+    related_article: growth-vs-value-stocks
+  - term: Common stock
+    definition: The most widely held type of stock, usually with voting rights. Common shareholders are paid last if a company goes bankrupt.
+    category: Stocks
+    related_article: common-vs-preferred-stock
+  - term: Preferred stock
+    definition: A type of stock that usually pays a fixed dividend before common shareholders are paid. It typically has no voting rights.
+    category: Stocks
+    related_article: common-vs-preferred-stock
+  - term: Concentration risk
+    definition: The risk of having too much money in one company, industry or investment. If that one holding struggles, your whole portfolio suffers.
+    category: Stocks
+    related_article: single-stock-risk
+
+  # Bonds
+  - term: Bond
+    definition: A loan you make to a government or company. In return, it pays you interest and repays your money on a set date.
+    category: Bonds
+    related_article: bonds-basics
+  - term: Coupon
+    definition: The interest rate a bond pays, usually twice a year. A $1,000 bond with a 4% coupon pays $40 a year.
+    category: Bonds
+    related_article: bonds-basics
+  - term: Face value
+    definition: The amount a bond repays when it matures, often $1,000. It is also called par value.
+    category: Bonds
+    related_article: bonds-basics
+  - term: Maturity
+    definition: The date a bond ends and the issuer repays its face value.
+    category: Bonds
+    related_article: bonds-basics
+  - term: Yield
+    definition: The income an investment produces, shown as a percentage. For bonds, yield rises when the price falls, and falls when the price rises.
+    category: Bonds
+    related_article: bond-yield
+  - term: Yield to maturity
+    definition: The total yearly return you can expect if you hold a bond until it matures, including interest and any gain or loss from the price you paid.
+    category: Bonds
+    related_article: bond-yield
+  - term: Interest rate risk
+    definition: The risk that a bond's price falls because interest rates rise. Longer-term bonds are affected more.
+    category: Bonds
+    related_article: interest-rates-and-bond-prices
+  - term: Credit rating
+    definition: A grade from a rating agency showing how likely a bond issuer is to pay its interest and repay the loan.
+    category: Bonds
+    related_article: bond-credit-ratings
+  - term: Investment grade
+    definition: A bond with a higher credit rating, meaning the issuer is considered more likely to pay. These bonds usually pay less interest than lower-rated ones.
+    category: Bonds
+    related_article: bond-credit-ratings
+  - term: High-yield bond
+    definition: A bond with a lower credit rating that pays more interest to make up for a higher chance of default. It is sometimes called a junk bond.
+    category: Bonds
+    related_article: corporate-bonds
+  - term: Default
+    definition: When a borrower, such as a bond issuer, fails to make promised interest or principal payments.
+    category: Bonds
+    related_article: corporate-bonds
+  - term: Treasury bill
+    definition: A short-term loan to the U.S. government that matures in one year or less. It is sold below face value, and you receive the full face value at maturity.
+    category: Bonds
+    related_article: treasury-securities
+  - term: TIPS
+    definition: Treasury Inflation-Protected Securities, U.S. government bonds whose principal rises and falls with inflation.
+    category: Bonds
+    related_article: treasury-securities
+  - term: I bond
+    definition: A U.S. savings bond whose interest rate combines a fixed rate and an inflation rate that resets every six months. It must be held for at least one year.
+    category: Bonds
+    related_article: i-bonds
+  - term: Municipal bond
+    definition: A bond issued by a state, city or other local government. Its interest is often exempt from federal income tax.
+    category: Bonds
+    related_article: municipal-bonds
+
+  # ETFs & Mutual Funds
+  - term: Mutual fund
+    definition: A fund that pools money from many investors to buy a collection of stocks, bonds or other investments. It is priced once a day at its net asset value.
+    category: ETFs & Mutual Funds
+    related_article: mutual-funds
+  - term: ETF
+    definition: An exchange-traded fund, a basket of investments that trades on a stock exchange like a single stock. Many ETFs track an index at a low cost.
+    category: ETFs & Mutual Funds
+    related_article: etfs
+  - term: Index fund
+    definition: A mutual fund or ETF that aims to match a market index, like the S&P 500, instead of trying to beat it. Index funds usually have low fees.
+    category: ETFs & Mutual Funds
+    related_article: index-funds
+  - term: Expense ratio
+    definition: The yearly fee a fund charges, shown as a percentage of your investment. A 0.50% expense ratio costs about $50 a year per $10,000 invested.
+    category: ETFs & Mutual Funds
+    related_article: expense-ratios
+  - term: Sales load
+    definition: A commission some mutual funds charge when you buy or sell shares. Funds without one are called no-load funds.
+    category: ETFs & Mutual Funds
+    related_article: sales-loads-and-12b-1-fees
+  - term: 12b-1 fee
+    definition: An ongoing yearly fee some mutual funds charge to pay for marketing and distribution. It is included in the fund's expense ratio.
+    category: ETFs & Mutual Funds
+    related_article: sales-loads-and-12b-1-fees
+  - term: Net asset value
+    definition: The price of one mutual fund share, calculated once a day by dividing the fund's assets minus its debts by the number of shares. It is often shortened to NAV.
+    category: ETFs & Mutual Funds
+    related_article: net-asset-value
+  - term: Target date fund
+    definition: A fund that holds a mix of stocks and bonds and becomes more conservative as a chosen year, usually your retirement year, gets closer.
+    category: ETFs & Mutual Funds
+    related_article: target-date-funds
+  - term: Glide path
+    definition: The planned schedule a target date fund follows to shift from stocks toward bonds and cash over time.
+    category: ETFs & Mutual Funds
+    related_article: target-date-funds
+  - term: Money market fund
+    definition: A mutual fund that invests in very short-term, high-quality debt and aims to keep a stable value. Unlike a bank deposit, it is not FDIC insured.
+    category: ETFs & Mutual Funds
+    related_article: money-market-funds
+  - term: Active management
+    definition: An approach where fund managers pick investments to try to beat the market. Actively managed funds usually charge higher fees.
+    category: ETFs & Mutual Funds
+    related_article: active-vs-passive-funds
+  - term: Passive investing
+    definition: An approach that tracks a market index instead of picking investments, usually through low-cost index funds.
+    category: ETFs & Mutual Funds
+    related_article: active-vs-passive-funds
+  - term: Prospectus
+    definition: A document that describes a fund or other investment, including its goals, risks and fees. Reading it before you invest helps you know what you are buying.
+    category: ETFs & Mutual Funds
+    related_article: mutual-funds
+
+  # Retirement & Tax Accounts
+  - term: 401(k)
+    definition: A retirement savings plan offered by an employer that lets you invest part of each paycheck with tax advantages. Many employers add a matching contribution.
+    category: Retirement & Tax Accounts
+    related_article: 401k-basics
+  - term: Employer match
+    definition: Money your employer adds to your retirement plan when you contribute, usually up to a set percentage of your salary.
+    category: Retirement & Tax Accounts
+    related_article: employer-match
+  - term: Vesting
+    definition: The schedule that determines when your employer's contributions become fully yours. Money you contribute yourself is always fully vested.
+    category: Retirement & Tax Accounts
+    related_article: employer-match
+  - term: Traditional IRA
+    definition: An individual retirement account where contributions may be tax-deductible and withdrawals in retirement are taxed as income.
+    category: Retirement & Tax Accounts
+    related_article: traditional-ira
+  - term: Roth IRA
+    definition: An individual retirement account funded with after-tax money, where qualified withdrawals in retirement are tax-free.
+    category: Retirement & Tax Accounts
+    related_article: roth-ira
+  - term: Tax-deferred
+    definition: Taxes on contributions and growth are postponed until you withdraw the money, as in a traditional 401(k) or IRA.
+    category: Retirement & Tax Accounts
+    related_article: traditional-vs-roth
+  - term: Catch-up contribution
+    definition: An extra amount people aged 50 or older can contribute to retirement accounts each year, above the regular limit.
+    category: Retirement & Tax Accounts
+    related_article: contribution-limits-2026
+  - term: Required minimum distribution
+    definition: The minimum amount you must withdraw each year from certain retirement accounts, such as traditional IRAs, generally starting at age 73. It is often shortened to RMD.
+    category: Retirement & Tax Accounts
+    related_article: traditional-vs-roth
+  - term: Early withdrawal penalty
+    definition: The 10% additional tax usually charged on retirement account withdrawals before age 59½, on top of income tax. Some exceptions apply.
+    category: Retirement & Tax Accounts
+    related_article: early-withdrawals
+  - term: Health savings account
+    definition: A tax-advantaged account for medical expenses, available with a qualifying high-deductible health plan. It is often shortened to HSA.
+    category: Retirement & Tax Accounts
+    related_article: health-savings-accounts
+  - term: High-deductible health plan
+    definition: A health insurance plan with a higher deductible that meets IRS rules. You need one to contribute to a health savings account.
+    category: Retirement & Tax Accounts
+    related_article: health-savings-accounts
+  - term: Capital gain
+    definition: The profit from selling an investment for more than you paid for it. In a taxable account, capital gains are taxed when you sell.
+    category: Retirement & Tax Accounts
+    related_article: capital-gains-tax
+  - term: Long-term capital gain
+    definition: A profit on an investment held more than one year. It is taxed at lower rates than regular income.
+    category: Retirement & Tax Accounts
+    related_article: capital-gains-tax
+  - term: Short-term capital gain
+    definition: A profit on an investment held one year or less. It is taxed at your regular income tax rate.
+    category: Retirement & Tax Accounts
+    related_article: capital-gains-tax
+  - term: Capital loss
+    definition: The loss from selling an investment for less than you paid. Capital losses can offset capital gains and up to $3,000 of other income a year.
+    category: Retirement & Tax Accounts
+    related_article: capital-gains-tax
+
+  # Portfolio & Risk
+  - term: Portfolio
+    definition: All the investments you own, taken together.
+    category: Portfolio & Risk
+    related_article: simple-portfolios
+  - term: Diversification
+    definition: Spreading your money across many different investments so that one poor performer doesn't sink your whole portfolio.
+    category: Portfolio & Risk
+    related_article: diversification
+  - term: Asset allocation
+    definition: How you divide your money among types of investments, mainly stocks, bonds and cash. Your mix shapes both your potential returns and your risk.
+    category: Portfolio & Risk
+    related_article: asset-allocation
+  - term: Rebalancing
+    definition: Adjusting your portfolio to bring it back to your target mix after market moves have shifted it.
+    category: Portfolio & Risk
+    related_article: rebalancing
+  - term: Risk tolerance
+    definition: How much ups and downs in your investments you are willing and able to handle. Finnie uses three levels, Conservative, Moderate and Aggressive.
+    category: Portfolio & Risk
+    related_article: risk-tolerance
+  - term: Volatility
+    definition: How much and how quickly an investment's price moves up and down. Higher volatility means bigger swings.
+    category: Portfolio & Risk
+    related_article: volatility
+  - term: Diversification score
+    definition: Finnie's 0 to 100 measure of how spread out your portfolio is. A single stock scores 0; a mix of broad funds scores high.
+    category: Portfolio & Risk
+    related_article: diversification
+  - term: Three-fund portfolio
+    definition: A simple portfolio built from three broad index funds, usually U.S. stocks, international stocks and U.S. bonds.
+    category: Portfolio & Risk
+    related_article: simple-portfolios
+
+  # Markets
+  - term: Stock exchange
+    definition: A marketplace where shares of public companies are bought and sold, such as the New York Stock Exchange or Nasdaq.
+    category: Markets
+    related_article: how-stock-markets-work
+  - term: Market index
+    definition: A measure that tracks the performance of a group of investments, giving a snapshot of part of the market.
+    category: Markets
+    related_article: market-indexes
+  - term: S&P 500
+    definition: A market index of about 500 large U.S. companies, widely used as a measure of the overall U.S. stock market.
+    category: Markets
+    related_article: market-indexes
+  - term: Bull market
+    definition: A period of rising prices and optimism, commonly defined as a rise of 20% or more from a recent low.
+    category: Markets
+    related_article: bull-and-bear-markets
+  - term: Bear market
+    definition: A period of falling prices and pessimism, commonly defined as a drop of 20% or more from a recent high.
+    category: Markets
+    related_article: bull-and-bear-markets
+  - term: Correction
+    definition: A market decline of about 10% from a recent high. Corrections are more common than bear markets.
+    category: Markets
+    related_article: bull-and-bear-markets
+  - term: Market order
+    definition: An order to buy or sell right away at the best available price. It almost always fills, but you don't control the exact price.
+    category: Markets
+    related_article: order-types
+  - term: Limit order
+    definition: An order to buy or sell only at a price you set or better. You control the price, but the order may never fill.
+    category: Markets
+    related_article: order-types
+  - term: Bid
+    definition: The highest price a buyer is currently willing to pay for a stock or other security.
+    category: Markets
+    related_article: how-trades-execute
+  - term: Ask
+    definition: The lowest price a seller is currently willing to accept for a stock or other security.
+    category: Markets
+    related_article: how-trades-execute
+  - term: Spread
+    definition: The difference between the bid and the ask price. Heavily traded stocks usually have very small spreads.
+    category: Markets
+    related_article: how-trades-execute
+  - term: Federal Reserve
+    definition: The central bank of the United States. It sets monetary policy, which influences interest rates across the economy.
+    category: Markets
+    related_article: interest-rates-and-the-fed
+  - term: Federal funds rate
+    definition: The interest rate banks charge each other for overnight loans. The Federal Reserve sets a target for it, which affects many other rates.
+    category: Markets
+    related_article: interest-rates-and-the-fed
+
+  # Goals & Saving
+  - term: Emergency fund
+    definition: Money set aside for unexpected costs like car repairs or a job loss. A common goal is three to six months of essential expenses.
+    category: Goals & Saving
+    related_article: emergency-fund
+  - term: High-yield savings account
+    definition: A savings account that pays a higher interest rate than a typical bank savings account. Many are offered by online banks.
+    category: Goals & Saving
+    related_article: savings-accounts-and-fdic
+  - term: FDIC insurance
+    definition: Federal protection for bank deposits, up to $250,000 per depositor, per insured bank, for each account ownership category. It does not cover investments like stocks or funds.
+    category: Goals & Saving
+    related_article: savings-accounts-and-fdic
+  - term: Certificate of deposit
+    definition: A bank deposit that pays a fixed rate for a set term. Taking money out early usually costs a penalty. It is often shortened to CD.
+    category: Goals & Saving
+    related_article: short-term-goals
+  - term: APR
+    definition: Annual percentage rate, the yearly cost of borrowing money, such as on a credit card. A high APR makes paying off that debt a strong first step before investing.
+    category: Goals & Saving
+    related_article: high-interest-debt-first
+  - term: Savings goal
+    definition: A specific amount you want to save by a certain date for a purpose, such as a down payment.
+    category: Goals & Saving
+    related_article: setting-financial-goals
