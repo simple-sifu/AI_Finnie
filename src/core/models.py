@@ -107,7 +107,7 @@ class AgentRequest(BaseModel):
 class AgentResponse(BaseModel):
     model_config = {"arbitrary_types_allowed": True}
 
-    agent: AgentName
+    agent: AgentName | None  # None when Finnie itself answers (clarifying or off-topic)
     answer: str
     response_type: ResponseType = "education"
     sources: list[Source] = Field(default_factory=list)

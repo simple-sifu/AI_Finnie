@@ -25,7 +25,7 @@ LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s [%(request_id)s] %(message)s"
 MASK = "****"
 
 # Libraries that log too much at INFO, including full request URLs.
-NOISY_LOGGERS = ("httpx", "httpcore", "openai", "urllib3", "sentence_transformers", "faiss")
+NOISY_LOGGERS = ("httpx", "httpx2", "httpcore", "openai", "urllib3", "sentence_transformers", "faiss")
 
 _request_id: contextvars.ContextVar[str] = contextvars.ContextVar("request_id", default="-")
 
