@@ -6,33 +6,15 @@ agent, calculators, data clients and cache. Only the outside services' responses
 
 from pathlib import Path
 
-import pytest
-import streamlit as st
-from streamlit.testing.v1 import AppTest
-
-from src.workflow import factory
+from tests.integration.conftest import DIVERSIFIED_CSV as DIVERSIFIED, upload_portfolio
 from tests.integration.support import PRICES
 
 ROOT = Path(__file__).resolve().parents[2]
-APP = str(ROOT / "src" / "web_app" / "app.py")
-DIVERSIFIED = (ROOT / "src" / "data" / "samples" / "diversified.csv").read_bytes()
 LIVE_LABEL = "Live · as of Oct 14 close"
 
 
-@pytest.fixture
-def app(stack, monkeypatch):
-    monkeypatch.setattr(factory, "build_services", lambda settings: stack.services)  # the app builds its services once
-    st.cache_resource.clear()
-    running = AppTest.from_file(APP, default_timeout=60)
-    running.run()
-    yield running
-    st.cache_resource.clear()
-
-
 def upload(app, data=DIVERSIFIED):
-    app.session_state["portfolio_input"] = ("mine.csv", data)  # what the uploader's callback stores
-    app.run()
-    return app
+    return upload_portfolio(app, data)
 
 
 def portfolio_charts(app):
