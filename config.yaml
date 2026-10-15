@@ -11,7 +11,7 @@ llm:
   max_retries: 3
 
 chat:
-  history_turns: 10
+  history_turns: 10           # chat messages sent to the router and agents (10 = the last 5 question/answer pairs)
   max_input_chars: 2000
   timeout_s: 90               # give up on one chat answer after this long
 

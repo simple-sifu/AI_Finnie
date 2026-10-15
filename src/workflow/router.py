@@ -8,7 +8,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from src.core.llm import LLMUnavailableError
-from src.core.models import AgentName, AgentRequest
+from src.core.models import AgentName, AgentRequest, ChatTurn
 from src.utils.logging import get_logger, log_event
 
 logger = get_logger(__name__)
@@ -32,6 +32,17 @@ Routes:
 Give a confidence from 0 to 1."""
 
 
+def router_prompt(history: list[ChatTurn]) -> str:
+    """The routing instructions, plus which agent answered last (taken from the history)."""
+    last = next((turn.agent for turn in reversed(history) if turn.role == "assistant" and turn.agent), None)
+    if last is None:
+        return ROUTER_PROMPT
+    return (
+        f"{ROUTER_PROMPT}\n\nThe previous answer in this conversation came from the {last.display_name} agent "
+        f"({last.value}). A short follow-up usually belongs to the same agent, unless the topic clearly changes."
+    )
+
+
 class RouteDecision(BaseModel):
     route: Route
     confidence: float = Field(ge=0, le=1)
@@ -51,7 +62,7 @@ class Router:
         workflow tells the user straight away instead of retrying the same outage.
         """
         try:
-            decision = await self.llm.structured(RouteDecision, ROUTER_PROMPT, request.message, request.history)
+            decision = await self.llm.structured(RouteDecision, router_prompt(request.history), request.message, request.history)
         except LLMUnavailableError:
             raise
         except Exception as exc:  # a broken router must never block the chat
