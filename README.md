@@ -4,7 +4,7 @@
 
 Finnie is a multi-agent conversational tutor that helps beginners learn to invest. Six specialist agents work behind a single chat interface. They explain concepts in plain language, analyze an uploaded portfolio, look up market data, plan savings goals, summarize financial news and explain US tax-advantaged accounts.
 
-> **Status: planning.** The product requirements document is final (v1.0). Implementation has not started yet. Setup and usage instructions will be added as the code is built.
+> **Status: in development.** Planning is complete (PRD, front-end spec and architecture are final). The project structure and test setup are in place; the app itself is being built epic by epic. Usage instructions will be added as features land.
 
 > **Disclaimer:** Finnie is an educational project. Nothing it produces is professional financial or tax advice. Any advice-type response it gives will carry a disclaimer.
 
@@ -68,7 +68,34 @@ Because these limits are tight, Finnie caches results (30 minutes for quotes, 24
 - **In scope:** all six agents, the four tabs, US markets and accounts only, local deployment, at least 80% test coverage.
 - **Out of scope:** user accounts or saved profiles (everything lasts for the session only), cloud hosting, the optional MCP server, and the Future Directions list in the PRD (for example, mobile apps, voice and automated investing).
 
-## Planned project structure
+## Development setup
+
+**Prerequisites:** Python 3.12 and git. Python 3.12 specifically, because some dependencies (PyTorch, FAISS) may not support newer versions.
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/simple-sifu/AI_Finnie.git
+cd AI_Finnie
+
+# 2. Create and activate a virtual environment
+python3.12 -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+# 3. Install the pinned dependencies (includes PyTorch, so this can take a few minutes)
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# 4. Run the tests with coverage
+pytest
+```
+
+`pytest` reports test coverage and fails if it drops below 80% (PRD D-13).
+
+API keys and app start-up instructions will be added with configuration (Story 1.5) and the app skeleton (Story 1.7).
+
+## Project structure
+
+The repository root is the `ai_finance_assistant/` folder from the prescribed structure:
 
 ```
 ai_finance_assistant/

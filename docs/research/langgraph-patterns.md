@@ -70,3 +70,14 @@ Sources: [Morph](https://www.morphllm.com/comparisons/langgraph-vs-crewai), [Fas
 2. Confirm `await graph.ainvoke(...)` on a compiled `StateGraph` with async nodes.
 3. Confirm `await ChatOpenAI(...).with_structured_output(Model).ainvoke(...)` returns a `Model` instance.
 4. Confirm that async LangChain/LangGraph clients work from the background event loop described in architecture §10.
+
+**Results (checked 2026-10-14 in Story 1.4, Python 3.12.13):**
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Versions pinned | Done: `langgraph==1.2.15`, `langchain==1.4.6`, `langchain-openai==1.7.2` (see `requirements.txt`) |
+| 2 | `await graph.ainvoke(...)` with async nodes and conditional edges | Confirmed |
+| 3 | `with_structured_output(Model).ainvoke(...)` returns a `Model` instance | Confirmed with `gpt-4o-mini` |
+| 4 | Async clients and the graph running on one background event loop across repeated calls | Confirmed |
+
+One observation from check 3: with a bare one-line prompt, "Roth IRA vs 401k?" was routed to Finance Q&A instead of Tax. The real router prompt needs each agent's description and example questions, as architecture §6.2 already specifies.

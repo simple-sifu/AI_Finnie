@@ -1,0 +1,14 @@
+[project]
+name = "finnie"
+version = "0.1.0"
+description = "Finnie: AI Finance Assistant, a multi-agent conversational tutor for beginner investors"
+requires-python = ">=3.12,<3.13"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "--cov=src --cov-report=term-missing --cov-fail-under=80"
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
