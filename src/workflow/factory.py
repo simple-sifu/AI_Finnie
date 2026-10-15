@@ -11,6 +11,7 @@ from src.agents.goal_planning import GoalPlanningAgent
 from src.agents.market import MarketAgent
 from src.agents.news import NewsAgent
 from src.agents.portfolio import PortfolioAgent
+from src.agents.tax import TaxAgent
 from src.core.llm import LLMClient
 from src.core.market_data import MarketData
 from src.core.models import AgentName
@@ -54,6 +55,7 @@ def build_services(settings, cache_dir: Path | None = None) -> FinnieServices:
     }
     if retriever is not None:
         agents[AgentName.FINANCE_QA] = FinanceQAAgent(llm, disclaimer, retriever)
+        agents[AgentName.TAX] = TaxAgent(llm, disclaimer, retriever)
 
     router = Router(llm, settings.router.min_confidence)
     workflow = FinnieWorkflow(router, agents, disclaimer, settings.chat.max_input_chars, settings.chat.timeout_s)

@@ -22,16 +22,25 @@ class GroundedAnswer(LLMAnswer):
     )
 
 
+GROUNDING_RULES = (
+    "Answer ONLY from the verified content above. Do not add facts, numbers or rules that "
+    "aren't in it. If the content doesn't answer the question, set answered_from_content to false "
+    "and say briefly that you don't have verified information on it. Don't mention the content's "
+    "numbering; sources are listed for the user automatically."
+)
+
+
+def context_blocks(results: list[RetrievedChunk]) -> str:
+    """The retrieved passages, numbered. Figures that change by year are labeled with their year."""
+    blocks = []
+    for i, r in enumerate(results, start=1):
+        year = f" (figures are for {r.chunk.as_of})" if r.chunk.as_of else ""
+        blocks.append(f"[{i}] {r.chunk.title}{year}\n{r.chunk.text}")
+    return "\n\n---\n\n".join(blocks)
+
+
 def build_context(results: list[RetrievedChunk]) -> str:
-    blocks = [f"[{i}] {r.chunk.title}\n{r.chunk.text}" for i, r in enumerate(results, start=1)]
-    return (
-        "Verified content from Finnie's knowledge base:\n\n"
-        + "\n\n---\n\n".join(blocks)
-        + "\n\nAnswer ONLY from the verified content above. Do not add facts, numbers or rules that "
-        "aren't in it. If the content doesn't answer the question, set answered_from_content to false "
-        "and say briefly that you don't have verified information on it. Don't mention the content's "
-        "numbering; sources are listed for the user automatically."
-    )
+    return f"Verified content from Finnie's knowledge base:\n\n{context_blocks(results)}\n\n{GROUNDING_RULES}"
 
 
 def search_query(request: AgentRequest) -> str:
