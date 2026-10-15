@@ -144,7 +144,7 @@ def render_selected(card: Card, services, runner, timeout: float) -> None:
     shown = st.session_state.get(EXPLAIN_RESULT)
     if shown and shown["symbol"] == card.symbol:  # an explanation belongs to one ticker
         response: AgentResponse = shown["response"]
-        st.markdown(response.answer)
+        components.render_answer(response.answer)
         components.freshness_labels(response.labels)
         if response.disclaimer:
             components.disclaimer_callout(response.disclaimer)
