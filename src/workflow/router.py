@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from src.core.llm import LLMUnavailableError
 from src.core.models import AgentName, AgentRequest
 from src.utils.logging import get_logger, log_event
 
@@ -43,9 +44,16 @@ class Router:
         self.min_confidence = min_confidence
 
     async def classify(self, request: AgentRequest) -> RouteDecision:
-        """Classify a message. If routing fails, fall back to Finance Q&A (Story 5.3 AC 1)."""
+        """Classify a message.
+
+        If routing fails, fall back to Finance Q&A (Story 5.3 AC 1). If OpenAI itself is
+        unavailable, raise LLMUnavailableError: no agent could answer either, so the
+        workflow tells the user straight away instead of retrying the same outage.
+        """
         try:
             decision = await self.llm.structured(RouteDecision, ROUTER_PROMPT, request.message, request.history)
+        except LLMUnavailableError:
+            raise
         except Exception as exc:  # a broken router must never block the chat
             log_event(logger, "error", level=logging.ERROR, kind="router_failed", detail=type(exc).__name__)
             return RouteDecision(route=AgentName.FINANCE_QA.value, confidence=0.0)

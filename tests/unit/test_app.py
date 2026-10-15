@@ -166,3 +166,24 @@ def test_cancel_keeps_the_chat(isolated_env):
     sidebar_button(app, "New conversation").click().run()
     sidebar_button(app, "Cancel").click().run()
     assert "first question" in [m.value for m in app.markdown]
+
+
+def test_a_failing_runner_shows_a_friendly_message_and_the_chat_stays_usable(isolated_env):
+    from src.agents.base import AGENT_FAILED
+
+    class FailingWorkflow(FakeWorkflow):
+        async def run(self, request):
+            if len(self.requests) == 0:
+                self.requests.append(request)
+                raise RuntimeError("runner exploded")
+            return await super().run(request)
+
+    services = FakeServices()
+    services.workflow = FailingWorkflow()
+    isolated_env.setattr(factory, "build_services", lambda settings: services)
+    app = chatted_app(isolated_env, ("will fail",))
+    assert not app.exception and AGENT_FAILED in [m.value for m in app.markdown]
+    app.chat_input[0].set_value("will work").run()
+    assert not app.exception and "Compound interest is interest on interest." in [m.value for m in app.markdown]
+    # the failed exchange is not sent back to the models
+    assert services.workflow.requests[1].history == []

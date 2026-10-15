@@ -39,8 +39,12 @@ class Conversation(BaseModel):
         return self.exchanges[-1].response.agent if self.exchanges else None
 
     def history(self, turns: int) -> list[ChatTurn]:
-        """The most recent `turns` chat turns (questions and answers), oldest first."""
-        flat = [turn for exchange in self.exchanges for turn in (exchange.question, exchange.answer)]
+        """The most recent `turns` chat turns (questions and answers), oldest first.
+
+        Exchanges that ended in an error are left out: "Sorry, something went wrong"
+        would only confuse the router and agents on the next question.
+        """
+        flat = [turn for e in self.exchanges if not e.response.error for turn in (e.question, e.answer)]
         return flat[-turns:] if turns > 0 else []
 
     def request(self, message: str, turns: int, payload: dict[str, Any] | None = None) -> AgentRequest:
