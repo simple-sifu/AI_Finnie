@@ -84,3 +84,18 @@ def test_overwriting_updates_the_fetch_time(cache, clock):
     cache.set("k", "v2", 60)
     entry = cache.get("k")
     assert entry.value == "v2" and entry.fetched_at == T0 + timedelta(minutes=5)
+
+
+def test_a_file_that_belongs_to_a_different_key_is_ignored(cache):
+    cache.set("quote:VTI", 1, 60)
+    path = cache._path("quote:VTI")
+    path.write_text(path.read_text().replace('"key": "quote:VTI"', '"key": "quote:SPY"'))  # e.g. a hash collision
+    assert cache.get("quote:VTI") is None
+
+
+def test_a_value_that_cannot_be_saved_raises_and_leaves_no_partial_file(cache):
+    cache.set("k", "good", 60)
+    with pytest.raises(TypeError):
+        cache.set("k", object(), 60)  # not JSON serializable
+    assert cache.get("k").value == "good"  # the earlier value is untouched
+    assert [p.suffix for p in cache.directory.iterdir()] == [".json"]  # and no temporary file is left behind

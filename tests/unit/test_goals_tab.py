@@ -273,3 +273,7 @@ def test_the_projection_chart_has_a_show_as_table_switch_with_the_same_data(env)
     table = goals(app).dataframe[0].value
     plan = plan_goal(20000, 3000, 48, 0.05)
     assert list(table["Projected balance"]) == [f"${b:,.2f}" for _, b in plan.schedule] and set(table["Goal"]) == {"$20,000.00"}
+
+
+def test_a_projection_with_fewer_than_two_points_has_no_chart():
+    assert charts.goal_projection(SimpleNamespace(schedule=[(0, 1000.0)], target_amount=5000.0)) is None

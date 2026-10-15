@@ -152,3 +152,10 @@ def test_runner_raises_the_coroutines_error():
             runner.run(fail())
     finally:
         runner.close()
+
+
+def test_closing_the_runner_releases_its_event_loop():
+    runner = AsyncRunner()
+    assert runner.run(asyncio.sleep(0, "ok")) == "ok"
+    runner.close()
+    assert runner.loop.is_closed() and not runner._thread.is_alive()

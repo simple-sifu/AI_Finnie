@@ -14,3 +14,8 @@ markers = ["live: calls real external APIs; runs only with RUN_LIVE_TESTS=1"]
 [tool.coverage.run]
 source = ["src"]
 branch = true
+
+[tool.coverage.report]
+# The line that starts a module when it is run with `python -m ...`. The commands' behavior is tested
+# through their main() functions and, for the config check, in a real subprocess.
+exclude_also = ["if __name__ == .__main__.:"]

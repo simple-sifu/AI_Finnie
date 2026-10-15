@@ -136,7 +136,7 @@ def env(tmp_path, monkeypatch):
         )
         monkeypatch.setattr(factory, "build_services", lambda settings: services)
         st.cache_resource.clear()
-        return SimpleNamespace(client=client, llm=llm, market=market)
+        return SimpleNamespace(client=client, llm=llm, market=market, agent=services.agents[AgentName.MARKET])
 
     yield build
     st.cache_resource.clear()
@@ -334,3 +334,43 @@ def test_the_trend_chart_has_a_show_as_table_switch_with_the_same_data(env):
     toggle.set_value(True).run()
     table = markets(app).dataframe[0].value
     assert list(table.columns) == ["Date", "Closing price"] and len(table) == 63 and table["Closing price"].iloc[-1] == "$121.00"
+
+
+def test_a_failing_explanation_gives_a_friendly_message_and_the_tab_keeps_working(env):
+    from src.agents.base import AGENT_FAILED
+
+    e = env()
+
+    async def boom(request):
+        raise RuntimeError("agent exploded")
+
+    e.agent.run = boom
+    app = run_app()
+    button(app, "explain_this").click().run()
+    assert not app.exception and AGENT_FAILED in texts(app)
+    assert [b for b in markets(app).button if b.key == "show_chart_QQQ"]  # the rest of the tab still works
+
+
+def test_a_card_without_a_label_still_shows_its_price_and_a_button():
+    script = """
+from src.core.freshness import DataSource
+from src.web_app.tabs import markets
+card = markets.Card("VTI", 10.0, 1.0, 10.0, None, DataSource.LIVE, [])
+markets.render_card(card, False, "vti")
+"""
+    app = AppTest.from_string(script).run()
+    assert not app.exception and "### $10.00" in [m.value for m in app.markdown]
+    assert not [c for c in app.caption if "●" in c.value] and app.button[0].label == "Show chart"
+
+
+def test_a_ticker_with_too_little_history_has_no_chart_but_can_still_be_explained():
+    script = """
+import streamlit as st
+from types import SimpleNamespace
+from src.core.freshness import DataSource
+from src.web_app.tabs import markets
+card = markets.Card("VTI", 10.0, None, None, None, DataSource.LIVE, [("2026-10-14", 10.0)])
+markets.render_selected(card, SimpleNamespace(), SimpleNamespace(), 5)
+"""
+    app = AppTest.from_string(script).run()
+    assert not app.exception and not app.get("plotly_chart") and app.button[0].label == "Explain this"

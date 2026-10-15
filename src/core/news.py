@@ -75,7 +75,7 @@ def normalize_query(query: str) -> str:
 
 
 def _parse_date(value: str | None) -> datetime | None:
-    if not value:
+    if not isinstance(value, str) or not value:
         return None
     try:
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
@@ -87,10 +87,16 @@ def parse_results(data: dict, limit: int = MAX_ITEMS) -> list[NewsItem]:
     """Flatten SerpApi news results, including topic clusters ("stories"), into articles."""
     items: list[NewsItem] = []
     seen: set[str] = set()
-    for result in data.get("news_results") or []:
-        for article in result.get("stories") or [result]:
+    results = data.get("news_results")
+    for result in results if isinstance(results, list) else []:
+        if not isinstance(result, dict):
+            continue
+        stories = result.get("stories")
+        for article in stories if isinstance(stories, list) and stories else [result]:
+            if not isinstance(article, dict):
+                continue
             link, title = article.get("link"), article.get("title")
-            if not link or not title or link in seen:
+            if not isinstance(link, str) or not isinstance(title, str) or not link or not title or link in seen:
                 continue
             seen.add(link)
             source = article.get("source") or {}
@@ -124,6 +130,8 @@ class SerpApiClient:
             raise NewsError(f"SerpApi request failed: {type(exc).__name__}") from None
         if not isinstance(data, dict):
             raise NewsError("SerpApi returned an unexpected response")
+        if response.status_code == 429:  # checked first: a 429 can come with an error message in its body
+            raise NewsLimitError("SerpApi returned HTTP 429 (too many requests)")
         error = data.get("error")
         if error:
             if _OUT_OF_SEARCHES.search(str(error)):
@@ -133,7 +141,10 @@ class SerpApiClient:
             raise NewsError(f"SerpApi error (HTTP {response.status_code})")
         if response.status_code >= 400:
             raise NewsError(f"SerpApi returned HTTP {response.status_code}")
-        return parse_results(data)
+        try:
+            return parse_results(data)
+        except (TypeError, AttributeError, ValueError) as exc:  # a malformed response is an error, not a crash
+            raise NewsError("SerpApi returned an unexpected response") from exc
 
 
 class NewsService:

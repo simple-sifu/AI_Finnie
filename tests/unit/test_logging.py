@@ -137,3 +137,16 @@ def test_no_log_dir_means_console_only(log_dir):
     setup_logging("INFO", log_dir=None, console=True)
     ours = [h for h in logging.getLogger().handlers if getattr(h, "_finnie", False)]
     assert len(ours) == 1 and not (log_dir / "finnie.log").exists()
+
+
+def test_secrets_are_masked_in_a_traceback_even_when_it_is_formatted_later():
+    import sys
+
+    finnie_logging.redactor.register(["supersecret-key-123"])
+    try:
+        raise RuntimeError("failed with supersecret-key-123")
+    except RuntimeError:
+        record = logging.LogRecord("x", logging.ERROR, __file__, 1, "request failed", None, sys.exc_info())
+    assert finnie_logging.redactor.filter(record)
+    assert "supersecret-key-123" not in record.exc_text and "Traceback" in record.exc_text and "****" in record.exc_text
+    finnie_logging.redactor._secrets.discard("supersecret-key-123")

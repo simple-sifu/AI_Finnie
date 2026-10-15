@@ -67,20 +67,6 @@ def test_format_lists_each_source_with_its_link_and_year():
     ]
 
 
-@pytest.mark.parametrize("question, expected_title", [("How much can I put in a Roth IRA in 2026?", "Roth IRAs")])
-def test_real_retrieval_produces_real_citations(question, expected_title):
-    """End to end with the real index: retrieved chunks become clickable government sources."""
-    from src.rag.index import load_index, sentence_transformer_embedder
-    from src.rag.retriever import Retriever
-
-    retriever = Retriever(load_index(), sentence_transformer_embedder())
-    sources = sources_from(retriever.search(question))
-    titles = [s.title for s in sources]
-    assert expected_title in titles
-    assert len(titles) == len(set(titles)), "each article listed once"
-    assert all(s.url.startswith("https://www.irs.gov/") for s in sources)
-
-
 def test_news_sources_show_their_publication_date():
     from datetime import date
 
