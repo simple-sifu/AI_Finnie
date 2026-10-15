@@ -51,5 +51,5 @@ def build_services(settings) -> FinnieServices:
         agents[AgentName.FINANCE_QA] = FinanceQAAgent(llm, disclaimer, retriever)
 
     router = Router(llm, settings.router.min_confidence)
-    workflow = FinnieWorkflow(router, agents, disclaimer, settings.chat.max_input_chars)
+    workflow = FinnieWorkflow(router, agents, disclaimer, settings.chat.max_input_chars, settings.chat.timeout_s)
     return FinnieServices(settings, llm, market, news, retriever, agents, workflow)

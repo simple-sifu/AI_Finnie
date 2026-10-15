@@ -49,6 +49,7 @@ class LLMSettings(BaseModel):
 class ChatSettings(BaseModel):
     history_turns: int = Field(10, ge=1)
     max_input_chars: int = Field(2000, ge=1)
+    timeout_s: float = Field(90, gt=0)  # one whole chat answer, router and agent together
 
 
 class RouterSettings(BaseModel):

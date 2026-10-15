@@ -6,10 +6,16 @@ disclaimer callout) are finished in Story 7.1.
 
 from __future__ import annotations
 
+import logging
+
 import streamlit as st
 
+from src.agents.base import AGENT_FAILED
 from src.core.models import AgentResponse, ChatTurn, format_sources
+from src.utils.logging import get_logger, log_event
 from src.workflow.conversation import get_conversation
+
+logger = get_logger(__name__)
 
 
 def _render(turn: ChatTurn, response: AgentResponse | None) -> None:
@@ -28,7 +34,7 @@ def _render(turn: ChatTurn, response: AgentResponse | None) -> None:
                 st.markdown(format_sources(response.sources))
 
 
-def render(services=None, runner=None, history_turns: int = 10) -> None:
+def render(services=None, runner=None, history_turns: int = 10, timeout: float = 120) -> None:
     st.subheader("Chat")
     if services is None or runner is None:
         st.info("The chat isn't available right now. Please check the configuration message above.")
@@ -44,7 +50,11 @@ def render(services=None, runner=None, history_turns: int = 10) -> None:
         return
     _render(ChatTurn(role="user", content=question), None)
     with st.spinner("Finnie is thinking…"):
-        response = runner.run(services.workflow.run(conversation.request(question, history_turns)))
+        try:
+            response = runner.run(services.workflow.run(conversation.request(question, history_turns)), timeout)
+        except Exception as exc:  # the workflow never raises, but the runner or loop might
+            log_event(logger, "error", level=logging.ERROR, kind="chat_failed", detail=type(exc).__name__)
+            response = AgentResponse(agent=None, answer=AGENT_FAILED, error=True)
     conversation.add(question, response)
     # Re-render the whole page so the sidebar (New conversation) sees the updated chat.
     st.rerun()
