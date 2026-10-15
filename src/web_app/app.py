@@ -138,7 +138,7 @@ def main() -> None:
     with tabs[2]:
         markets.render(services, runner, settings.market.tickers, settings.chat.timeout_s + 15)
     with tabs[3]:
-        goals.render()
+        goals.render(settings.goals.annual_return, settings.disclaimer.text)
 
 
 main()
