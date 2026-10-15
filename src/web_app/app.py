@@ -133,7 +133,9 @@ def main() -> None:
     tabs = st.tabs(list(TABS))
     with tabs[0]:
         chat.render(services, runner, settings.chat.history_turns, settings.chat.timeout_s + 15)
-    for tab, module in zip(tabs[1:], list(TABS.values())[1:]):
+    with tabs[1]:
+        portfolio.render(services, runner, settings.chat.timeout_s + 15)
+    for tab, module in zip(tabs[2:], list(TABS.values())[2:]):
         with tab:
             module.render()
 
