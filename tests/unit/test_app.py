@@ -420,3 +420,35 @@ def test_cancelling_in_the_chat_tab_keeps_the_conversation(isolated_env):
     chat_tab_button(app, "New conversation").click().run()
     chat_tab_button(app, "Cancel").click().run()
     assert "How is VTI doing?" in [m.value for m in app.markdown] and not app.tabs[0].warning[1:]
+
+
+def test_the_app_finds_the_project_when_started_from_another_folder(isolated_env):
+    """`streamlit run` puts the script's folder on the path, not the project root."""
+    import sys
+
+    root = str(Path(APP).parents[2])
+    saved = list(sys.path)
+    sys.path[:] = [p for p in sys.path if Path(p or ".").resolve() != Path(root)]
+    try:
+        for name, value in KEYS.items():
+            isolated_env.setenv(name, value)
+        app = run_app()
+        assert not app.exception and root in sys.path
+    finally:
+        sys.path[:] = saved
+
+
+def test_a_stale_index_is_logged_with_how_to_rebuild_it(isolated_env, caplog):
+    import logging
+
+    for name, value in KEYS.items():
+        isolated_env.setenv(name, value)
+    isolated_env.setattr(rag_index, "is_stale", lambda knowledge: True)
+    with caplog.at_level(logging.WARNING, logger="src.web_app.app"):
+        app = run_app()
+    assert not app.exception and "index_stale" in caplog.text and "python -m src.rag.build_index" in caplog.text
+
+
+def test_the_chat_tab_explains_when_the_services_are_not_available():
+    app = AppTest.from_string("from src.web_app.tabs import chat\nchat.render(None, None)\n").run()
+    assert "The chat isn't available right now. Please check the configuration message above." in [i.value for i in app.info]

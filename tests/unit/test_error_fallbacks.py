@@ -167,3 +167,19 @@ def test_errors_are_shown_but_not_fed_back_to_the_models():
     conversation.add("second", AgentResponse(agent=None, answer=AGENT_FAILED, error=True))
     assert len(conversation.exchanges) == 2  # both are displayed
     assert [t.content for t in conversation.history(10)] == ["first", "good answer"]
+
+
+def test_a_missing_knowledge_base_index_disables_only_the_agents_that_need_it(tmp_path, monkeypatch):
+    from src.core.config import load_settings
+    from src.rag.index import IndexLoadError
+    from src.workflow import factory
+
+    def no_index(settings):
+        raise IndexLoadError("The knowledge base index is missing (faiss.index). Run `python -m src.rag.build_index` to build it.")
+
+    monkeypatch.setattr(factory, "create_retriever", no_index)
+    keys = {"OPENAI_API_KEY": "sk-x-123456", "ALPHA_VANTAGE_API_KEY": "a", "SERPAPI_API_KEY": "s"}
+    services = factory.build_services(load_settings(config_path=tmp_path / "none.yaml", environ=keys), cache_dir=tmp_path)
+    assert services.retriever is None
+    assert AgentName.FINANCE_QA not in services.agents and AgentName.TAX not in services.agents
+    assert {AgentName.PORTFOLIO, AgentName.MARKET, AgentName.GOAL_PLANNING, AgentName.NEWS} <= set(services.agents)

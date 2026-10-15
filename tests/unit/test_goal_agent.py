@@ -222,3 +222,11 @@ def test_a_problem_with_what_was_said_is_reported_before_asking_for_the_rest():
 def test_validation_skips_details_that_are_still_missing():
     assert validate(None, None, None, TODAY) == []
     assert validate(None, -5, None, TODAY) == ["Your current savings can't be negative. If you have nothing saved yet, use $0."]
+
+
+def test_what_the_goal_is_for_reaches_the_explanation():
+    llm = FakeLLM(extraction())
+    agent = GoalPlanningAgent(llm, "d", RETURNS, today=lambda: TODAY)
+    request = AgentRequest(message="plan", profile=SessionProfile(risk_tolerance="moderate", goal_note="a house down payment"))
+    asyncio.run(agent.run(request))
+    assert "What it's for: a house down payment" in llm.calls[-1]["system"]

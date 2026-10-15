@@ -98,6 +98,22 @@ streamlit run src/web_app/app.py
 
 `pytest` reports test coverage and fails if it drops below 80% (PRD D-13). Tests never use your real API keys.
 
+### Running the tests
+
+```bash
+pytest                     # all tests, with a coverage report
+pytest tests/unit          # just the unit tests: about 20 seconds, fully offline
+```
+
+- **Coverage:** `pytest` fails if line coverage drops below 80% (it is about 99%).
+- **Unit tests make no real API calls.** A guard in `tests/unit/conftest.py` watches every outside network connection and fails any test that tries one. They use mocks, sample data and fixed seeds, and they do not need your API keys or a `.env` file.
+- **Integration tests** (`tests/integration`) use the real embedding model and the real knowledge-base index, but still no paid API. The model is downloaded once (about 90 MB).
+- **Live tests** call OpenAI (a few cents at most) and are skipped unless you ask for them:
+
+```bash
+RUN_LIVE_TESTS=1 pytest -m live -s      # needs your .env keys
+```
+
 ### Configuration
 
 - **API keys** go in `.env`, which is never committed. You need `OPENAI_API_KEY`, `ALPHA_VANTAGE_API_KEY` and `SERPAPI_API_KEY`. `TAVILY_API_KEY` is only needed if you switch the news provider to Tavily.

@@ -28,5 +28,8 @@ class AsyncRunner:
         return asyncio.run_coroutine_threadsafe(coro, self.loop).result(timeout)
 
     def close(self) -> None:
+        """Stop the loop and release it."""
         self.loop.call_soon_threadsafe(self.loop.stop)
         self._thread.join(timeout=5)
+        if not self._thread.is_alive():
+            self.loop.close()

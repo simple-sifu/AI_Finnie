@@ -245,3 +245,34 @@ def test_tavily_provider_is_not_available_in_v1(tmp_path):
     )
     with pytest.raises(ConfigError, match="Tavily"):
         NewsService.from_settings(settings, cache_dir=tmp_path)
+
+
+def test_an_article_without_a_date_is_kept_with_no_date():
+    items = parse_results({"news_results": [{"title": "T", "link": "https://x/1"}]})
+    assert [i.published_at for i in items] == [None]
+
+
+def test_from_settings_accepts_a_custom_sample_provider(tmp_path):
+    settings = load_settings(config_path=tmp_path / "none.yaml", environ=dict(KEYS))
+    provider = FakeMock()
+    assert NewsService.from_settings(settings, cache_dir=tmp_path, mock=provider).mock is provider
+
+
+@respx.mock
+async def test_an_out_of_searches_message_in_an_ordinary_response_is_a_limit_too(client):
+    respx.get(SERPAPI_URL).mock(return_value=httpx.Response(200, json={"error": "Your account has run out of searches."}))
+    with pytest.raises(NewsLimitError):
+        await client.search("x")
+
+
+@respx.mock
+async def test_a_failure_while_reading_a_response_is_a_news_error_not_a_crash(client, monkeypatch):
+    from src.core import news as news_module
+
+    def broken(data, limit=10):
+        raise TypeError("unexpected structure")
+
+    monkeypatch.setattr(news_module, "parse_results", broken)
+    respx.get(SERPAPI_URL).mock(return_value=httpx.Response(200, json={"news_results": []}))
+    with pytest.raises(NewsError, match="unexpected response"):
+        await client.search("x")

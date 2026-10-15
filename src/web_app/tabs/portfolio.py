@@ -84,10 +84,15 @@ def read_upload(uploaded) -> tuple[str, bytes] | None:
     return None if uploaded is None else (uploaded.name, uploaded.getvalue())
 
 
-def _on_upload() -> None:
-    chosen = read_upload(st.session_state.get(f"portfolio_upload_{st.session_state.get(UPLOAD_KEY, 0)}"))
+def apply_upload(session) -> None:
+    """Store the file the user just uploaded as the portfolio input (a plain function so it can be tested)."""
+    chosen = read_upload(session.get(f"portfolio_upload_{session.get(UPLOAD_KEY, 0)}"))
     if chosen:
-        st.session_state[INPUT_KEY] = chosen
+        session[INPUT_KEY] = chosen
+
+
+def _on_upload() -> None:
+    apply_upload(st.session_state)
 
 
 def _load_sample(label: str) -> None:

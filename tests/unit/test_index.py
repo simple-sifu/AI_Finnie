@@ -124,3 +124,15 @@ def test_committed_index_matches_current_content():
     knowledge = load_index(INDEX_DIR)
     assert knowledge.manifest["dimensions"] == 384
     assert not is_stale(knowledge), "content changed: run `python -m src.rag.build_index`"
+
+
+@pytest.mark.filterwarnings("ignore:'src.rag.build_index' found in sys.modules:RuntimeWarning")  # a runpy quirk
+def test_python_m_build_index_builds_and_exits_zero(tmp_path, monkeypatch, capsys):
+    import runpy
+
+    monkeypatch.setattr("src.rag.index.sentence_transformer_embedder", lambda: fake_embed)  # no real model
+    monkeypatch.setattr("src.rag.index.INDEX_DIR", tmp_path)  # never touch the committed index
+    with pytest.raises(SystemExit) as result:
+        runpy.run_module("src.rag.build_index", run_name="__main__")
+    assert result.value.code == 0 and "Built index:" in capsys.readouterr().out
+    assert load_index(tmp_path).size > 0

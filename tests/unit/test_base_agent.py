@@ -194,3 +194,10 @@ def test_client_from_settings_uses_openai_model(tmp_path):
     client = LLMClient.from_settings(settings)
     assert client.chat_model.model_name == "gpt-4o-mini" and client.chat_model.temperature == 0.2
     assert client.max_retries == 3 and client.chat_model.max_retries == 0
+
+
+def test_ask_adds_extra_context_after_the_system_prompt():
+    llm = FakeLLM(LLMAnswer(answer="ok", response_type="education"))
+    asyncio.run(EchoAgent(llm, DISCLAIMER).ask(AgentRequest(message="hi"), extra_context="EXTRA FACTS"))
+    system = llm.calls[0]["system"]
+    assert system.endswith("EXTRA FACTS") and BEGINNER_STYLE in system

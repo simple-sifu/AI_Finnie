@@ -118,6 +118,8 @@ class AlphaVantageClient:
             response.raise_for_status()
             data = response.json()
         except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 429:  # "too many requests": a limit, so retrying would only waste more of it
+                raise RateLimitError("Alpha Vantage returned HTTP 429 (too many requests)") from None
             raise MarketDataError(f"Alpha Vantage returned HTTP {exc.response.status_code}") from None
         except (httpx.HTTPError, ValueError) as exc:
             raise MarketDataError(f"Alpha Vantage request failed: {type(exc).__name__}") from None
@@ -145,7 +147,7 @@ class AlphaVantageClient:
                 as_of=date.fromisoformat(quote["07. latest trading day"]),
                 fetched_at=_now(),
             )
-        except (KeyError, ValueError) as exc:
+        except (KeyError, ValueError, TypeError, AttributeError) as exc:  # a malformed response is an error, not a crash
             raise MarketDataError(f"Unexpected quote format for {symbol}") from exc
 
     async def get_daily_history(self, ticker: str) -> PriceHistory | NotFound:
@@ -164,7 +166,7 @@ class AlphaVantageClient:
                 PricePoint(date.fromisoformat(day), float(bar["4. close"]), int(bar["5. volume"]))
                 for day, bar in series.items()
             ]
-        except (KeyError, ValueError) as exc:
+        except (KeyError, ValueError, TypeError, AttributeError) as exc:  # a malformed response is an error, not a crash
             raise MarketDataError(f"Unexpected price history format for {symbol}") from exc
         return PriceHistory(symbol, sorted(points, key=lambda p: p.day), _now())
 

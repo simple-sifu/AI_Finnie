@@ -55,7 +55,15 @@ def parse_holdings(data: bytes | str, max_rows: int = 200, max_file_mb: float = 
     except UnicodeDecodeError:
         return ParseResult([], ["This file isn't a readable CSV text file. Please save it as CSV (UTF-8)."], [])
 
-    reader = csv.reader(io.StringIO(text))
+    # Old Mac spreadsheets end lines with a bare carriage return, which Python's csv module rejects.
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    try:
+        return _parse(csv.reader(io.StringIO(text)), max_rows)
+    except csv.Error:  # e.g. a single field longer than the csv module allows
+        return ParseResult([], ["This file doesn't look like a valid CSV. Please check it and save it as CSV (UTF-8)."], [])
+
+
+def _parse(reader, max_rows: int) -> ParseResult:
     header = next(reader, None)
     columns = [c.strip().lower() for c in header] if header else []
     missing = [name for name in ("ticker", "shares") if name not in columns]

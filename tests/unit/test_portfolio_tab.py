@@ -291,3 +291,48 @@ def test_each_portfolio_chart_has_a_show_as_table_switch_with_the_same_data(env)
     pie_table = next(t for t in tables if "Share of portfolio" in t.columns and "Holding" in t.columns)
     bar_table = next(t for t in tables if "Type of investment" in t.columns)
     assert list(pie_table["Holding"]) == ["VTI", "VXUS", "BND", "VNQ", "AAPL"] and "Stock funds" in list(bar_table["Type of investment"])
+
+
+def test_apply_upload_stores_the_uploaded_file_in_the_session():
+    uploaded = SimpleNamespace(name="mine.csv", getvalue=lambda: b"ticker,shares\nVTI,1\n")
+    session = {"portfolio_upload_0": uploaded}
+    tab.apply_upload(session)
+    assert session[tab.INPUT_KEY] == ("mine.csv", b"ticker,shares\nVTI,1\n")
+    after_clear = {tab.UPLOAD_KEY: 3, "portfolio_upload_3": uploaded}  # clearing makes a new uploader with a new key
+    tab.apply_upload(after_clear)
+    assert after_clear[tab.INPUT_KEY][0] == "mine.csv"
+
+
+def test_apply_upload_ignores_an_empty_uploader_and_keeps_what_was_chosen_before():
+    session = {tab.INPUT_KEY: ("Diversified portfolio", b"x"), "portfolio_upload_0": None}
+    tab.apply_upload(session)
+    assert session[tab.INPUT_KEY] == ("Diversified portfolio", b"x")
+
+
+def test_the_expense_ratio_says_how_much_of_the_portfolio_it_covers(env):
+    env.market.prices = {**PRICES, "VTSAX": 100.0}
+    app = run_app()
+    app.session_state["portfolio_input"] = ("mine.csv", b"ticker,shares\nVTSAX,10\nVTI,5\n")  # VTSAX: a fund with no known fee
+    app.run()
+    assert not app.exception
+    # VTI is 5 x $300 = $1,500 and VTSAX is 10 x $100 = $1,000, so the fee is known for 60% of the portfolio
+    assert "Based on 60% of your portfolio" in [c.value for c in portfolio_tab(app).caption]
+    assert metrics(app)["Weighted expense ratio"] == "0.030%"
+
+
+def test_the_tab_explains_when_the_services_are_not_available():
+    app = AppTest.from_string("from src.web_app.tabs import portfolio\nportfolio.render(None, None)\n").run()
+    assert [i.value for i in app.info] == ["The portfolio analysis isn't available right now. Please check the configuration message above."]
+
+
+def test_the_uploader_callback_stores_the_file_in_the_session():
+    script = """
+import streamlit as st
+from types import SimpleNamespace
+from src.web_app.tabs import portfolio
+st.session_state["portfolio_upload_0"] = SimpleNamespace(name="mine.csv", getvalue=lambda: b"ticker,shares\\nVTI,1\\n")
+portfolio._on_upload()
+st.write(st.session_state["portfolio_input"][0])
+"""
+    app = AppTest.from_string(script).run()
+    assert not app.exception and [m.value for m in app.markdown] == ["mine.csv"]

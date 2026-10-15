@@ -57,10 +57,6 @@ class TaxAnswer(GroundedAnswer):
     non_us: bool = Field(default=False, description="True if the question is about another country's tax rules.")
 
 
-def _numbers(pattern: re.Pattern[str], text: str) -> set[float]:
-    return {float(match.replace(",", "")) for match in pattern.findall(text)}
-
-
 def unsupported_figures(answer: str, support: str) -> list[str]:
     """Dollar amounts and percentages in `answer` that appear nowhere in `support`.
 

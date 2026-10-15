@@ -171,3 +171,23 @@ def test_invalid_rag_settings_are_reported(tmp_path):
     path = write_yaml(tmp_path, "rag:\n  chunk_chars: 10\n")
     with pytest.raises(ConfigError, match="rag.chunk_chars"):
         load_rag_settings(config_path=path, environ={})
+
+
+def run_config_command(**env):
+    """Run `python -m src.core.config` for real, in its own process (no network involved)."""
+    import os
+    import subprocess
+    import sys
+
+    return subprocess.run([sys.executable, "-m", "src.core.config"], cwd=ROOT, capture_output=True, text=True,
+                          env={**os.environ, **env}, timeout=60)
+
+
+def test_python_m_config_exits_zero_when_the_settings_are_valid():
+    result = run_config_command(**KEYS)
+    assert result.returncode == 0 and "Configuration OK" in result.stdout
+
+
+def test_python_m_config_exits_one_and_names_the_missing_key():
+    result = run_config_command(**{**KEYS, "OPENAI_API_KEY": ""})  # a blank value counts as missing
+    assert result.returncode == 1 and "OPENAI_API_KEY" in result.stderr and KEYS["SERPAPI_API_KEY"] not in result.stderr

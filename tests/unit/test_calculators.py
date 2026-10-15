@@ -195,3 +195,9 @@ def test_lower_returns_need_a_higher_monthly_saving():
 )
 def test_months_until(target_date, months):
     assert months_until(target_date, date(2026, 10, 15)) == months
+
+
+def test_diversification_of_nothing_is_zero():
+    from src.core.calculators import diversification_score
+
+    assert diversification_score({}, {}) == 0
