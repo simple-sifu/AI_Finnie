@@ -84,17 +84,19 @@ def make_label(
     as_of: date | datetime | None,
     now: datetime,
     closing: bool = True,
+    kind: str = "prices",
 ) -> DataLabel | None:
     """Label a result. Returns None for UNAVAILABLE, which has no data to label.
 
     `closing=True` describes `as_of` as a market close (quotes, price history);
-    use False for news, whose date is a publication date.
+    use False for news, whose date is a publication date. `kind` completes the sample
+    wording: "Sample data · not real prices" (market data) or "... not real headlines" (news).
     """
     freshness = _FRESHNESS.get(source)
     if freshness is None:
         return None
     if freshness is Freshness.SAMPLE:
-        return DataLabel(freshness, None, None, "Sample data · not real prices")
+        return DataLabel(freshness, None, None, f"Sample data · not real {kind}")
 
     parts = ["Live" if freshness is Freshness.LIVE else "Cached"]
     if freshness is Freshness.CACHED and fetched_at is not None:

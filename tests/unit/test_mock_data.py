@@ -87,7 +87,7 @@ async def test_mock_mode_serves_labeled_samples_without_any_api_call(tmp_path):
 
     assert quote.source is history.source is headlines.source is DataSource.SAMPLE
     assert quote.label().text == history.label().text == "Sample data · not real prices"
-    assert headlines.label().text == "Sample data · not real prices"
+    assert headlines.label().text == "Sample data · not real headlines"
     assert not av.called and not serp.called
     await market.client.aclose()
     await news.client.aclose()

@@ -59,7 +59,9 @@ class NewsResult:
         if not self.items:
             return None
         dates = [item.published_at for item in self.items if item.published_at]
-        return make_label(self.source, self.fetched_at, max(dates) if dates else None, now or utc_now(), closing=False)
+        return make_label(
+            self.source, self.fetched_at, max(dates) if dates else None, now or utc_now(), closing=False, kind="headlines"
+        )
 
 
 class MockNews(Protocol):
