@@ -75,3 +75,23 @@ def price_trend(symbol: str, points: list[tuple[str, float]], days: int = TREND_
     fig.update_xaxes(title_text="Date")
     fig.update_yaxes(title_text="Closing price ($)", tickprefix="$")
     return _layout(fig, f"{symbol}: last 3 months")
+
+
+def goal_projection(plan) -> go.Figure | None:
+    """The projected balance year by year, with the goal as a dashed horizontal line (Story 7.4)."""
+    if len(plan.schedule) < 2:
+        return None
+    years = [months / 12 for months, _ in plan.schedule]
+    balances = [balance for _, balance in plan.schedule]
+    fig = go.Figure(go.Scatter(
+        x=years, y=balances, mode="lines+markers", line={"color": TREND_COLOR, "width": 2}, name="Projected balance",
+        hovertemplate="Year %{x:.1f}: $%{y:,.2f}<extra></extra>",
+    ))
+    fig.add_hline(
+        y=plan.target_amount, line_dash="dash", line_color="#d62728",
+        annotation_text=f"Goal: ${plan.target_amount:,.0f}", annotation_position="top left",
+    )
+    fig.update_xaxes(title_text="Years from now", rangemode="tozero")
+    fig.update_yaxes(title_text="Balance ($)", tickprefix="$", rangemode="tozero")
+    fig.update_layout(showlegend=False)
+    return _layout(fig, f"Your path to ${plan.target_amount:,.0f}")

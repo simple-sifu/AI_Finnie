@@ -61,28 +61,36 @@ def parse_date(text: str | None) -> date | None:
         return None
 
 
+def field_problems(
+    amount: float | None, current: float | None, months: int | None, today: date, years: float | None = None
+) -> dict[str, str]:
+    """Why a goal can't be planned, by field: "amount", "savings" and "time". Empty if it can.
+
+    Details that are still missing (None) are skipped, so a problem with what the user has
+    already said is reported at once instead of after they've answered every question. The
+    Goals tab shows each message next to its own field (Story 7.4).
+    """
+    problems: dict[str, str] = {}
+    if amount is not None and amount <= 0:
+        problems["amount"] = "The target amount needs to be more than $0."
+    elif amount is not None and amount > MAX_GOAL_AMOUNT:
+        problems["amount"] = f"The target amount is too large for me to plan (the limit is ${MAX_GOAL_AMOUNT:,})."
+    if current is not None and current < 0:
+        problems["savings"] = "Your current savings can't be negative. If you have nothing saved yet, use $0."
+    if years is not None and years <= 0:
+        problems["time"] = "The number of years needs to be more than 0."
+    elif months is not None and months < 1:
+        problems["time"] = "The target date needs to be in the future."
+    elif months is not None and months > MAX_GOAL_YEARS * 12:
+        problems["time"] = f"That's further out than I can plan. Please choose a goal within {MAX_GOAL_YEARS} years."
+    return problems
+
+
 def validate(
     amount: float | None, current: float | None, months: int | None, today: date, years: float | None = None
 ) -> list[str]:
-    """Reasons a goal can't be planned, in plain words. Empty if it can.
-
-    Details that are still missing (None) are skipped, so a problem with what the user has
-    already said is reported at once instead of after they've answered every question.
-    """
-    problems = []
-    if amount is not None and amount <= 0:
-        problems.append("The target amount needs to be more than $0.")
-    elif amount is not None and amount > MAX_GOAL_AMOUNT:
-        problems.append(f"The target amount is too large for me to plan (the limit is ${MAX_GOAL_AMOUNT:,}).")
-    if current is not None and current < 0:
-        problems.append("Your current savings can't be negative. If you have nothing saved yet, use $0.")
-    if years is not None and years <= 0:
-        problems.append("The number of years needs to be more than 0.")
-    elif months is not None and months < 1:
-        problems.append("The target date needs to be in the future.")
-    elif months is not None and months > MAX_GOAL_YEARS * 12:
-        problems.append(f"That's further out than I can plan. Please choose a goal within {MAX_GOAL_YEARS} years.")
-    return problems
+    """The same problems as a list of messages, for the chat."""
+    return list(field_problems(amount, current, months, today, years).values())
 
 
 def explain_problems(problems: list[str]) -> str:
