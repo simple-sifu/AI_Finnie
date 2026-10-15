@@ -1,6 +1,6 @@
 ---
 title: Finnie — Front-End Specification
-status: draft
+status: final
 created: 2026-10-14
 updated: 2026-10-14
 source: docs/prd.md (v1.0)
@@ -10,7 +10,7 @@ source: docs/prd.md (v1.0)
 
 This spec turns the UI requirements in [`prd.md`](prd.md) into screen-level detail for the Streamlit app. The PRD is the source of truth. References like (Story 7.1) or (D-24) point to it.
 
-Anything the PRD does not already specify is marked **NEW** and is pending PM approval.
+Anything the PRD does not already specify is marked **NEW**. All NEW items were approved by the PM on 2026-10-14.
 
 ## 1. UX Goals and Principles
 
@@ -196,9 +196,9 @@ All user-facing messages, in one place, so tone stays consistent.
 - Custom branding beyond the name "Finnie" (D-39)
 - Mobile apps and voice input (D-23)
 
-## 9. Open Items for PM Approval
+## 9. Approved Additions
 
-Everything marked **NEW** above:
+The items marked **NEW** above, all approved by the PM on 2026-10-14:
 1. The "About Finnie" sidebar note (§2)
 2. Freshness label colors and exact wording (§3.1)
 3. The default disclaimer wording (§3.2)
