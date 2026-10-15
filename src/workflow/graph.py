@@ -37,13 +37,8 @@ OFF_TOPIC_REPLY = (
     "your portfolio, checking stock and fund prices, planning savings goals, financial news and US "
     "retirement and tax accounts. What would you like to know?"
 )
-COMING_SOON = {
-    AgentName.GOAL_PLANNING: "Goal planning is coming soon.",
-    AgentName.NEWS: "Financial news is coming soon.",
-    AgentName.TAX: "Tax education is coming soon.",
-}
+# Shown if an agent couldn't be built at start-up, e.g. the knowledge base index is missing (Finance Q&A and Tax).
 UNAVAILABLE = "That part of Finnie isn't available right now. Please try again later."
-COMING_SOON_SUFFIX = " For now I can explain finance concepts, analyze your portfolio and look up stock and fund prices."
 
 
 class FinnieWorkflow:
@@ -84,8 +79,7 @@ class FinnieWorkflow:
         async def node(state: FinnieState) -> FinnieState:
             agent = self.agents.get(name)
             if agent is None:
-                answer = COMING_SOON[name] + COMING_SOON_SUFFIX if name in COMING_SOON else UNAVAILABLE
-                return {"response": AgentResponse(agent=name, answer=answer)}
+                return {"response": AgentResponse(agent=name, answer=UNAVAILABLE)}
             try:
                 return {"response": await agent.run(state["request"])}
             except Exception as exc:  # agents already catch their own errors; this is the last safety net
