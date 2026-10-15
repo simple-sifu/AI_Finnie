@@ -79,7 +79,9 @@ def diversification_score(weights: dict[str, float], is_fund: dict[str, bool]) -
 
 
 def diversification_label(score: int) -> str:
-    return "Low" if score < 40 else "Medium" if score < 70 else "High"
+    # Thresholds raised by the PM in Story 3.3 so that a portfolio split between two
+    # stocks (score ~50) reads as Low: below 60 Low, 60-84 Medium, 85 and up High.
+    return "Low" if score < 60 else "Medium" if score < 85 else "High"
 
 
 def risk_level(score: float) -> str:

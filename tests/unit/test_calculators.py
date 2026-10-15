@@ -67,7 +67,10 @@ def test_nothing_priced():
     assert m.total_value == 0 and m.unpriced == ["XYZ"] and m.weighted_expense_ratio is None
 
 
-@pytest.mark.parametrize("score, label", [(0, "Low"), (39, "Low"), (40, "Medium"), (69, "Medium"), (70, "High")])
+@pytest.mark.parametrize(
+    "score, label",
+    [(0, "Low"), (53, "Low"), (59, "Low"), (60, "Medium"), (80, "Medium"), (84, "Medium"), (85, "High"), (90, "High")],
+)
 def test_diversification_labels(score, label):
     assert diversification_label(score) == label
 

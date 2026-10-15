@@ -101,8 +101,8 @@ def test_concentrated_sample_flags_two_stocks_and_high_risk():
     m = response.data["metrics"]
     # AAPL 16000, TSLA 16000, VOO 1000 -> both stocks about 48%
     assert m.concentrated == ["AAPL", "TSLA"] and m.risk_level == "High"
-    # Approved formula: two stocks at ~48% each -> 1/N_eff ~ 0.47 -> score 53, labeled Medium (40-69).
-    assert m.diversification_score == 53 and m.diversification_label == "Medium"
+    # Two stocks at ~48% each -> 1/N_eff ~ 0.47 -> score 53, labeled Low (below 60).
+    assert m.diversification_score == 53 and m.diversification_label == "Low"
 
 
 def test_missing_expense_ratios_are_filled_from_the_table():

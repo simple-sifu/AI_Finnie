@@ -449,7 +449,7 @@ Only priced holdings count toward the totals (D-41). The weight of holding *i* i
   - Effective number of holdings: `N_eff = 1 / Σ pⱼ²`, over all positions *j* with weights *pⱼ*.
   - Score = `round(100 × (1 − 1 / N_eff))`.
   - Examples: one stock = 0; five equal stocks = 80; one broad fund = 90; three equal funds ≈ 97.
-  - Labels: 0–39 Low, 40–69 Medium, 70–100 High.
+  - Labels: 0–59 Low, 60–84 Medium, 85–100 High. (Changed by the PM in Story 3.3 from 0–39 / 40–69 / 70–100, because a portfolio split between two stocks scored about 53 and read as "Medium". Now two stocks read Low, five equal stocks (80) Medium, and one broad fund (90) High.)
 - **Risk assessment**
   - Each asset type has a risk weight: cash/money market 1, bond fund 2, balanced fund 3, stock fund 4, individual stock 5.
   - Portfolio risk = Σ wᵢ × weightᵢ. Below 2.5 is Low, 2.5–3.75 is Moderate, above 3.75 is High.
