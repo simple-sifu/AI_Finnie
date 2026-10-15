@@ -97,7 +97,9 @@ Don't predict future prices. If asked whether to buy or sell, explain the consid
         extracted = await self.llm.structured(
             TickerRequest,
             "Identify which US stocks or funds the user is asking about. Map company or fund names to their "
-            "ticker symbols (Apple -> AAPL). Set overall_market if they ask about the market in general.",
+            "ticker symbols (Apple -> AAPL). If the message refers back to something from earlier in the "
+            "conversation (\"it\", \"that fund\", \"how about over 3 months?\"), use the earlier messages to "
+            "work out which ticker is meant. Set overall_market if they ask about the market in general.",
             request.message,
             request.history,
         )

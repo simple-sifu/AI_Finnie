@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from src.agents.base import BaseAgent
 from src.agents.finance_qa import FinanceQAAgent
@@ -32,10 +33,10 @@ class FinnieServices:
     workflow: FinnieWorkflow
 
 
-def build_services(settings) -> FinnieServices:
+def build_services(settings, cache_dir: Path | None = None) -> FinnieServices:
     llm = LLMClient.from_settings(settings)
-    market = MarketData.from_settings(settings)
-    news = NewsService.from_settings(settings)
+    market = MarketData.from_settings(settings, cache_dir=cache_dir)
+    news = NewsService.from_settings(settings, cache_dir=cache_dir)
     try:
         retriever = create_retriever(settings)
     except IndexLoadError as exc:
