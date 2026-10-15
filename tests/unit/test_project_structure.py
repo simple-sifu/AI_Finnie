@@ -16,6 +16,8 @@ def test_prescribed_folders_exist():
     for folder in [*PACKAGES, "data"]:
         assert (ROOT / "src" / folder).is_dir(), f"missing src/{folder}"
     assert (ROOT / "tests").is_dir()
+    assert (ROOT / "scripts").is_dir()
+    assert (ROOT / "scripts" / "benchmark.py").is_file()
 
 
 def test_prescribed_files_exist():
