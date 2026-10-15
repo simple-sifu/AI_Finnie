@@ -4,18 +4,21 @@ Free-tier freshness (checked 2026-10-15, Alpha Vantage support page): realtime
 and 15-minute delayed US data are premium-only, so free quotes are end-of-day
 data "as of" the latest trading day. Every Quote carries that date (D-42).
 
-This module only talks to the API and parses responses. Caching (Story 8.2),
-request limits and fallbacks (Story 8.3) and freshness labels (Story 8.4) are
-layered on top.
+`AlphaVantageClient` talks to the API and parses responses. `CachedMarketData`
+adds the disk cache (Story 8.2). Request limits and fallbacks (Story 8.3) and
+freshness labels (Story 8.4) are layered on top.
 """
 
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import date, datetime, timezone
+from pathlib import Path
 
 import httpx
+
+from src.core.cache import DEFAULT_CACHE_DIR, DiskCache
 
 BASE_URL = "https://www.alphavantage.co/query"
 _TICKER = re.compile(r"^[A-Z][A-Z.\-]{0,9}$")
@@ -155,3 +158,95 @@ class AlphaVantageClient:
         except (KeyError, ValueError) as exc:
             raise MarketDataError(f"Unexpected price history format for {symbol}") from exc
         return PriceHistory(symbol, sorted(points, key=lambda p: p.day), _now())
+
+
+# --- Caching layer (Story 8.2) ---------------------------------------------
+
+
+@dataclass(frozen=True)
+class MarketResult:
+    """A market data answer plus where it came from, for freshness labels (Story 8.4)."""
+
+    value: Quote | PriceHistory | NotFound
+    fetched_at: datetime  # when the data was originally fetched from Alpha Vantage
+    from_cache: bool
+
+
+def _quote_to_dict(q: Quote) -> dict:
+    return {**asdict(q), "as_of": q.as_of.isoformat(), "fetched_at": q.fetched_at.isoformat()}
+
+
+def _quote_from_dict(d: dict) -> Quote:
+    return Quote(**{**d, "as_of": date.fromisoformat(d["as_of"]), "fetched_at": datetime.fromisoformat(d["fetched_at"])})
+
+
+def _history_to_dict(h: PriceHistory) -> dict:
+    return {
+        "symbol": h.symbol,
+        "points": [[p.day.isoformat(), p.close, p.volume] for p in h.points],
+        "fetched_at": h.fetched_at.isoformat(),
+    }
+
+
+def _history_from_dict(d: dict) -> PriceHistory:
+    points = [PricePoint(date.fromisoformat(day), close, volume) for day, close, volume in d["points"]]
+    return PriceHistory(d["symbol"], points, datetime.fromisoformat(d["fetched_at"]))
+
+
+def _encode(value: Quote | PriceHistory | NotFound) -> dict:
+    if isinstance(value, Quote):
+        return {"type": "quote", "data": _quote_to_dict(value)}
+    if isinstance(value, PriceHistory):
+        return {"type": "history", "data": _history_to_dict(value)}
+    return {"type": "not_found", "data": {"symbol": value.symbol}}
+
+
+def _decode(record: dict) -> Quote | PriceHistory | NotFound:
+    kind, data = record["type"], record["data"]
+    if kind == "quote":
+        return _quote_from_dict(data)
+    if kind == "history":
+        return _history_from_dict(data)
+    return NotFound(data["symbol"])
+
+
+class CachedMarketData:
+    """Serves quotes and history from the disk cache while fresh, otherwise from the API.
+
+    Quotes stay fresh for `quote_ttl_seconds` (30 minutes, NFR3) and daily history for
+    `history_ttl_seconds` (24 hours, D-41). "Not found" answers are cached too, so a
+    mistyped ticker doesn't use up requests.
+    """
+
+    def __init__(self, client: AlphaVantageClient, cache: DiskCache, quote_ttl_seconds: int, history_ttl_seconds: int):
+        self.client = client
+        self.cache = cache
+        self.ttl = {"quote": quote_ttl_seconds, "history": history_ttl_seconds}
+
+    @classmethod
+    def from_settings(cls, settings, cache_dir: Path | None = None) -> CachedMarketData:
+        cache = DiskCache(cache_dir or DEFAULT_CACHE_DIR, namespace="market")
+        return cls(
+            AlphaVantageClient.from_settings(settings),
+            cache,
+            settings.market.quote_ttl_seconds,
+            settings.market.history_ttl_seconds,
+        )
+
+    async def get_quote(self, ticker: str) -> MarketResult:
+        return await self._get("quote", ticker, self.client.get_quote)
+
+    async def get_daily_history(self, ticker: str) -> MarketResult:
+        return await self._get("history", ticker, self.client.get_daily_history)
+
+    async def _get(self, kind: str, ticker: str, fetch) -> MarketResult:
+        symbol = normalize_ticker(ticker)
+        if symbol is None:
+            return MarketResult(NotFound((ticker or "").strip().upper()), self.cache.clock(), from_cache=False)
+        key = f"{kind}:{symbol}"
+        entry = self.cache.get_fresh(key)
+        if entry is not None:
+            return MarketResult(_decode(entry.value), entry.fetched_at, from_cache=True)
+        value = await fetch(symbol)
+        stored = self.cache.set(key, _encode(value), self.ttl[kind])
+        return MarketResult(value, stored.fetched_at, from_cache=False)
