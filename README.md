@@ -106,6 +106,16 @@ streamlit run src/web_app/app.py
 
 If a required key is missing, the app shows which one instead of starting. The tabs show placeholders until each feature is built.
 
+### Knowledge base index
+
+Finnie's articles and glossary are searched through a FAISS index stored in `src/data/index/` and committed to the repo, so it works right after cloning. After editing anything in `src/data/articles/` or `src/data/glossary.yaml`, or the `rag:` settings, rebuild it:
+
+```bash
+python -m src.rag.build_index    # no API keys needed; first run downloads a ~90 MB model
+```
+
+A test fails if the content has changed without a rebuild.
+
 ## Sample data
 
 Sample portfolios for testing and the demo are in [`src/data/samples/`](src/data/samples/). Holdings files are CSVs with the columns `ticker`, `shares` and an optional `expense_ratio`, written as a percentage (`0.03` means 0.03%).

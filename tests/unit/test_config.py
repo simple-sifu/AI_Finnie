@@ -155,3 +155,19 @@ def test_load_settings_reads_env_file(tmp_path, monkeypatch):
     env_file.write_text("\n".join(f"{name}={value}" for name, value in KEYS.items()))
     settings = load_settings(config_path=tmp_path / "missing.yaml", env_file=env_file)
     assert settings.secrets.serpapi_api_key.get_secret_value() == KEYS["SERPAPI_API_KEY"]
+
+
+def test_rag_settings_load_without_any_keys(tmp_path):
+    from src.core.config import load_rag_settings
+
+    path = write_yaml(tmp_path, "rag:\n  chunk_chars: 600\n")
+    rag = load_rag_settings(config_path=path, environ={"FINNIE_RAG__TOP_K": "6"})
+    assert rag.chunk_chars == 600 and rag.top_k == 6
+
+
+def test_invalid_rag_settings_are_reported(tmp_path):
+    from src.core.config import load_rag_settings
+
+    path = write_yaml(tmp_path, "rag:\n  chunk_chars: 10\n")
+    with pytest.raises(ConfigError, match="rag.chunk_chars"):
+        load_rag_settings(config_path=path, environ={})

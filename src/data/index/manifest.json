@@ -1,0 +1,11 @@
+{
+  "model": "sentence-transformers/all-MiniLM-L6-v2",
+  "dimensions": 384,
+  "chunk_count": 222,
+  "article_chunks": 127,
+  "glossary_chunks": 95,
+  "chunk_chars": 800,
+  "chunk_overlap": 100,
+  "content_hash": "84a1dafc14527b0079a0844024408ce38a5a36e0ce2f5430d43cf2526d16b27f",
+  "built_at": "2026-10-15T03:59:45+00:00"
+}
