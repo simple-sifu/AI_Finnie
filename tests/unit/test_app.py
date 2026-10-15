@@ -7,7 +7,9 @@ import streamlit as st
 from streamlit.testing.v1 import AppTest
 
 from src.core import config
+from src.core.models import AgentName, AgentResponse, Source
 from src.rag import index as rag_index
+from src.workflow import factory
 
 APP = str(Path(__file__).resolve().parents[2] / "src" / "web_app" / "app.py")
 KEYS = {
@@ -23,9 +25,31 @@ def isolated_env(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "PROJECT_ROOT", tmp_path)
     for name in [*KEYS, "TAVILY_API_KEY"]:
         monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(factory, "build_services", lambda settings: FakeServices())
     st.cache_resource.clear()  # start-up is cached per process; each test starts fresh
     yield monkeypatch
     st.cache_resource.clear()
+
+
+class FakeWorkflow:
+    def __init__(self):
+        self.requests = []
+
+    async def run(self, request):
+        self.requests.append(request)
+        return AgentResponse(
+            agent=AgentName.FINANCE_QA,
+            answer="Compound interest is interest on interest.",
+            response_type="advice",
+            disclaimer="Not personalized advice.",
+            sources=[Source(title="How Compound Interest Grows Your Money", url="https://www.investor.gov/x",
+                            source_name="Investor.gov (U.S. SEC)", category="Investing Basics")],
+        )
+
+
+class FakeServices:
+    def __init__(self):
+        self.workflow = FakeWorkflow()
 
 
 def run_app() -> AppTest:
@@ -40,7 +64,8 @@ def test_app_starts_with_four_tabs(isolated_env):
     app = run_app()
     assert not app.exception
     assert [tab.label for tab in app.tabs] == ["Chat", "Portfolio", "Markets", "Goals"]
-    assert len(app.info) == 4  # one placeholder per tab
+    assert len(app.info) == 3  # placeholders for Portfolio, Markets and Goals
+    assert len(app.chat_input) == 1  # Chat is live (Story 5.1)
     assert app.sidebar.title[0].value == "Finnie"
     assert not app.error
 
@@ -75,3 +100,25 @@ def test_app_shows_no_warning_when_the_index_loads(isolated_env):
         isolated_env.setenv(name, value)
     app = run_app()
     assert not app.warning
+
+
+def test_chat_question_gets_an_agent_answer(isolated_env):
+    for name, value in KEYS.items():
+        isolated_env.setenv(name, value)
+    app = run_app()
+    app.chat_input[0].set_value("What is compound interest?").run()
+    assert not app.exception
+    texts = [m.value for m in app.markdown]
+    assert "What is compound interest?" in texts and "Compound interest is interest on interest." in texts
+    assert "Finance Q&A" in [c.value for c in app.caption]
+    assert any("Not personalized advice." in w.value for w in app.warning)
+
+
+def test_chat_history_is_kept_between_questions(isolated_env):
+    for name, value in KEYS.items():
+        isolated_env.setenv(name, value)
+    app = run_app()
+    app.chat_input[0].set_value("first question").run()
+    app.chat_input[0].set_value("second question").run()
+    texts = [m.value for m in app.markdown]
+    assert texts.count("Compound interest is interest on interest.") == 2 and "first question" in texts

@@ -9,6 +9,7 @@ testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
 addopts = "--cov=src --cov-report=term-missing --cov-fail-under=80"
+markers = ["live: calls real external APIs; runs only with RUN_LIVE_TESTS=1"]
 
 [tool.coverage.run]
 source = ["src"]

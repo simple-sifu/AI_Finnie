@@ -1,0 +1,44 @@
+# Routing test set (Story 5.1, AC 6): at least 5 labeled questions per agent.
+# Run with: RUN_LIVE_TESTS=1 pytest -m live tests/integration/test_routing_live.py
+finance_qa:
+  - What is compound interest?
+  - What's the difference between an ETF and a mutual fund?
+  - How do bonds work?
+  - What does diversification mean?
+  - What is an index fund?
+  - What is a dividend?
+portfolio:
+  - Can you analyze my portfolio?
+  - Is my portfolio diversified enough?
+  - Are the fees on my investments too high?
+  - How risky are my current holdings?
+  - I uploaded my holdings, what do you think?
+  - Do I have too much money in one stock?
+market:
+  - How is VTI doing today?
+  - What's Apple's stock price?
+  - How has the S&P 500 performed this month?
+  - Is Tesla stock up or down this week?
+  - What's the current price of QQQ?
+  - How's the stock market doing today?
+goal_planning:
+  - How much should I save each month for a $20,000 down payment in 4 years?
+  - Can I retire at 60 if I save $500 a month?
+  - I want $1 million by retirement, how much do I need to invest?
+  - How long will it take to save $10,000?
+  - Help me plan to save for my kid's college in 15 years.
+  - How much do I need to save monthly to buy a car in 2 years?
+news:
+  - What's in the financial news today?
+  - Why did stocks fall this week?
+  - Any news about the Federal Reserve?
+  - What happened in the markets today?
+  - Summarize the latest news about inflation.
+  - What are the top business headlines right now?
+tax:
+  - Should I choose a Roth IRA or a traditional IRA?
+  - How are capital gains taxed?
+  - What is a 401(k) and how does it lower my taxes?
+  - What's an HSA?
+  - What happens if I withdraw from my IRA early?
+  - How much can I contribute to my 401(k) this year?

@@ -13,9 +13,11 @@ import streamlit as st  # noqa: E402
 
 from src import __version__  # noqa: E402
 from src.core.config import ConfigError, Settings, load_settings  # noqa: E402
+from src.core.async_runner import AsyncRunner  # noqa: E402
 from src.rag.index import IndexLoadError, KnowledgeIndex, is_stale, load_index  # noqa: E402
 from src.utils.logging import get_logger, log_event, setup_logging_from_settings  # noqa: E402
 from src.web_app.tabs import chat, goals, markets, portfolio  # noqa: E402
+from src.workflow.factory import FinnieServices, build_services  # noqa: E402
 
 TABS = {"Chat": chat, "Portfolio": portfolio, "Markets": markets, "Goals": goals}
 
@@ -53,6 +55,18 @@ def load_knowledge() -> KnowledgeIndex | None:
     return knowledge
 
 
+@st.cache_resource
+def get_runner() -> AsyncRunner:
+    """One background event loop for the whole app (architecture §10)."""
+    return AsyncRunner()
+
+
+@st.cache_resource
+def get_services(_settings: Settings) -> FinnieServices:
+    """Build the LLM client, data services, agents and workflow once per app process."""
+    return build_services(_settings)
+
+
 def render_sidebar() -> None:
     with st.sidebar:
         st.title("Finnie")
@@ -64,7 +78,7 @@ def render_sidebar() -> None:
 def main() -> None:
     st.set_page_config(page_title="Finnie", layout="wide")
     try:
-        start_up()
+        settings = start_up()
     except ConfigError as exc:
         st.error(f"Finnie can't start because of a configuration problem.\n\n{exc}")
         st.stop()
@@ -76,7 +90,12 @@ def main() -> None:
         )
 
     render_sidebar()
-    for tab, module in zip(st.tabs(list(TABS)), TABS.values()):
+    runner = get_runner()
+    services = get_services(settings)
+    tabs = st.tabs(list(TABS))
+    with tabs[0]:
+        chat.render(services, runner, settings.chat.history_turns)
+    for tab, module in zip(tabs[1:], list(TABS.values())[1:]):
         with tab:
             module.render()
 
