@@ -56,7 +56,14 @@ docker run --rm -p 8501:8501 --env-file .env -v finnie-cache:/app/.cache finnie:
 ## Verify deployment
 
 ```bash
+./scripts/final_check.sh           # config + pytest + UAT + benchmarks (Story 10.4)
+```
+
+Or step by step:
+
+```bash
 python -m src.core.config          # Configuration OK
-pytest                             # optional; full suite with coverage gate
-python scripts/benchmark.py        # optional; NFR13 offline benchmarks
+pytest                             # full suite with coverage gate
+pytest -k uat --cov-fail-under=0
+python scripts/benchmark.py        # NFR13 offline benchmarks
 ```

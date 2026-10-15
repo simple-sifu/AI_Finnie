@@ -1,7 +1,7 @@
 ---
 title: Finnie — Performance Benchmarks
 story: 9.4
-generated: 2026-10-15 08:18 UTC
+generated: 2026-10-15 08:36 UTC
 ---
 
 # Performance benchmarks (NFR13)
@@ -14,12 +14,12 @@ Measurements use the **offline fake stack** (same as integration tests): instant
 
 | Target | Limit | Measured | Result | Notes |
 |---|---|---|---|---|
-| App startup (index + embedder + services) | ≤ 10 s | 4.95 s | Pass | — |
-| Knowledge-base retrieval (max of 5 queries, warmed) | ≤ 300 ms | 7 ms | Pass | — |
+| App startup (index + embedder + services) | ≤ 10 s | 5.39 s | Pass | — |
+| Knowledge-base retrieval (max of 5 queries, warmed) | ≤ 300 ms | 6 ms | Pass | — |
 | Market quote (cache hit) | ≤ 1 s | 0 ms | Pass | — |
 | Market quote (live fake API) | ≤ 3 s | 1 ms | Pass | — |
 | Portfolio metrics (50 holdings, cached prices, no LLM) | ≤ 2 s | 2 ms | Pass | — |
-| Chat latency (median, 11 questions) | ≤ 6 s | 16 ms | Pass | — |
+| Chat latency (median, 11 questions) | ≤ 6 s | 17 ms | Pass | — |
 | Chat latency (p90, 11 questions) | ≤ 12 s | 19 ms | Pass | — |
 | Holdings upload limit | 200 rows or 1 MB | 200 rows, 1.0 MB | Pass | — |
 

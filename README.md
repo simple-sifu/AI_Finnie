@@ -4,7 +4,7 @@
 
 Finnie is a multi-agent conversational tutor that helps beginners learn to invest. Six specialist agents work behind a single chat interface. They explain concepts in plain language, analyze an uploaded portfolio, look up market data, plan savings goals, summarize financial news and explain US tax-advantaged accounts.
 
-> **Status: v1 prototype ready for local evaluation.** All six agents, four tabs, tests and benchmarks are implemented. See [Usage examples](#usage-examples) to try Finnie after setup.
+> **Status: v1 submission-ready.** All ten epics are implemented (agents, UI, tests, UAT, benchmarks, docs, Docker). Run [`scripts/final_check.sh`](scripts/final_check.sh) before submitting. See [Usage examples](#usage-examples) to try Finnie.
 
 > **Disclaimer:** Finnie is an educational project. Nothing it produces is professional financial or tax advice. Any advice-type response it gives will carry a disclaimer.
 
@@ -301,6 +301,7 @@ ai_finance_assistant/
 - [`docs/benchmarks.md`](docs/benchmarks.md): NFR13 performance benchmarks (Story 9.4)
 - [`docs/demo-video-script.md`](docs/demo-video-script.md) and [`docs/demo-video.md`](docs/demo-video.md): demo recording script and submission link checklist (Story 10.2)
 - [`docs/deployment.md`](docs/deployment.md): deployment artifacts and Docker instructions (Story 10.3)
+- [`docs/final-polish.md`](docs/final-polish.md): Story 10.4 sign-off and submission checklist
 - [`docs/sources/`](docs/sources/): source documents the PRD was built from
 
 ## Roadmap
