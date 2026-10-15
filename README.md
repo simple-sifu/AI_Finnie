@@ -85,13 +85,23 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 4. Run the tests with coverage
+# 4. Add your API keys
+cp .env.example .env             # then edit .env and fill in the keys
+python -m src.core.config        # checks the configuration; prints "Configuration OK"
+
+# 5. Run the tests with coverage
 pytest
 ```
 
-`pytest` reports test coverage and fails if it drops below 80% (PRD D-13).
+`pytest` reports test coverage and fails if it drops below 80% (PRD D-13). Tests never use your real API keys.
 
-API keys and app start-up instructions will be added with configuration (Story 1.5) and the app skeleton (Story 1.7).
+### Configuration
+
+- **API keys** go in `.env`, which is never committed. You need `OPENAI_API_KEY`, `ALPHA_VANTAGE_API_KEY` and `SERPAPI_API_KEY`. `TAVILY_API_KEY` is only needed if you switch the news provider to Tavily.
+- **Settings** are in `config.yaml`: model, cache times, tickers, limits and the disclaimer text.
+- **Overrides:** environment variables win over `config.yaml`. `OPENAI_MODEL`, `MARKET_DATA_MODE` (`live` or `mock`) and `QUOTE_CACHE_TTL_SECONDS` have their own names. Any other setting can be overridden with `FINNIE_<SECTION>__<KEY>`, for example `FINNIE_MARKET__DAILY_LIMIT=10`.
+
+App start-up instructions will be added with the app skeleton (Story 1.7).
 
 ## Project structure
 

@@ -1,1 +1,57 @@
-# Finnie settings. Populated by Story 1.5 (configuration management).
+# Finnie settings (Story 1.5). API keys never go here: put them in .env.
+# Environment variables override this file:
+#   - OPENAI_MODEL, MARKET_DATA_MODE, QUOTE_CACHE_TTL_SECONDS (see .env.example)
+#   - any setting below via FINNIE_<SECTION>__<KEY>, e.g. FINNIE_MARKET__DAILY_LIMIT=10
+
+llm:
+  model: gpt-4o-mini          # D-6; overridden by OPENAI_MODEL
+  temperature: 0.2
+  timeout_s: 30
+  max_concurrent: 4
+  max_retries: 3
+
+chat:
+  history_turns: 10
+  max_input_chars: 2000
+
+router:
+  min_confidence: 0.5
+
+rag:
+  chunk_chars: 800
+  chunk_overlap: 100
+  top_k: 4
+  min_score: 0.35
+
+market:
+  mode: live                  # live | mock; overridden by MARKET_DATA_MODE
+  tickers: [SPY, QQQ, DIA, VTI, BND]   # 3 to 5 tickers (D-18)
+  quote_ttl_seconds: 1800     # 30 minutes (NFR3); overridden by QUOTE_CACHE_TTL_SECONDS
+  history_ttl_seconds: 86400  # 24 hours (D-41)
+  daily_limit: 25
+  per_minute_limit: 5
+  max_retries: 3
+
+news:
+  provider: serpapi           # serpapi | tavily (D-10, D-14)
+  ttl_seconds: 21600          # 6 hours
+  monthly_limit: 100
+
+goals:
+  annual_return:              # architecture §11.3
+    conservative: 0.03
+    moderate: 0.05
+    aggressive: 0.07
+
+portfolio:
+  max_rows: 200
+  max_file_mb: 1
+
+disclaimer:
+  text: >-
+    This is general information for learning purposes, not personalized financial,
+    investment or tax advice. Consider speaking with a licensed professional before
+    making decisions.
+
+logging:
+  level: INFO
