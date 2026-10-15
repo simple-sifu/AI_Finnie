@@ -84,3 +84,13 @@ class Retriever:
                 f"Unknown category {', '.join(map(repr, unknown))}. Use one of: {', '.join(CATEGORIES)}"
             )
         return set(categories)
+
+
+def create_retriever(settings, warm_up: bool = True) -> Retriever:
+    """Load the saved index and the embedding model, ready for agents (raises IndexLoadError)."""
+    from src.rag.index import load_index, sentence_transformer_embedder
+
+    retriever = Retriever(load_index(), sentence_transformer_embedder(), settings.rag.top_k, settings.rag.min_score)
+    if warm_up:
+        retriever.warm_up()
+    return retriever
