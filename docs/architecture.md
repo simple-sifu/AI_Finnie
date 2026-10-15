@@ -394,7 +394,9 @@ flowchart TD
     M -->|no| R5[Return: price unavailable]
 ```
 
+- **Free-tier freshness (checked 2026-10-15, Story 8.1):** Alpha Vantage's support page states that realtime and 15-minute delayed US market data are premium-only. Free-tier quotes are end-of-day data for the latest trading day. A quote fetched during market hours describes the previous close, so the freshness label always shows the quote's own date (D-42), for example "as of Oct 14".
 - **Limit detection:** a response containing a `Note` or `Information` key and no data counts as a rate-limit failure (Story 8.3, AC 2).
+- **Burst limit (found 2026-10-15, Story 8.1):** besides 5 per minute and 25 per day, Alpha Vantage rejects free requests sent faster than about **1 per second**, with the message "Please consider spreading out your free API requests more sparingly (1 request per second)". The rate limiter (Story 8.3) spaces calls at least 1 second apart.
 - **Budgets:** a per-minute sliding window (5) and a daily counter (25), saved in `.cache/` so restarts don't reset them. The daily counter resets at midnight US Eastern time (**NEW** assumption; to be checked with the free-tier check in Story 8.1, AC 6).
 - **No waiting on the per-minute limit (NEW):** if the per-minute budget is used up, the request goes straight to the stale-cache and mock fallbacks rather than waiting up to 60 seconds. This keeps the UI responsive and inside the NFR13 targets. Example: a 10-holding portfolio on a cold cache gets 5 live prices, and the rest come from cache, sample data or "price unavailable", each clearly labeled. A **Refresh prices** button retries later.
 - **Retries:** tenacity with exponential backoff (1s, 2s, 4s; up to `market.max_retries`, default 3) for timeouts and 5xx errors only. Rate-limit notices are not retried.
