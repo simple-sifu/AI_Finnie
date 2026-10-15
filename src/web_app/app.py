@@ -16,8 +16,9 @@ from src.core.config import ConfigError, Settings, load_settings  # noqa: E402
 from src.core.async_runner import AsyncRunner  # noqa: E402
 from src.rag.index import IndexLoadError, KnowledgeIndex, is_stale, load_index  # noqa: E402
 from src.utils.logging import get_logger, log_event, setup_logging_from_settings  # noqa: E402
+from src.web_app import components  # noqa: E402
 from src.web_app.tabs import chat, goals, markets, portfolio  # noqa: E402
-from src.workflow.conversation import get_conversation, reset_conversation  # noqa: E402
+from src.workflow.conversation import get_conversation  # noqa: E402
 from src.workflow.factory import FinnieServices, build_services  # noqa: E402
 
 TABS = {"Chat": chat, "Portfolio": portfolio, "Markets": markets, "Goals": goals}
@@ -68,28 +69,6 @@ def get_services(_settings: Settings) -> FinnieServices:
     return build_services(_settings)
 
 
-NEW_CONVERSATION_CONFIRM = "Start a new conversation? Your current chat and profile will be cleared."
-
-
-def render_new_conversation() -> None:
-    """The New conversation action, with the confirmation from front-end spec §6."""
-    if not st.session_state.get("confirm_reset"):
-        if st.button("New conversation", disabled=not get_conversation(st.session_state).exchanges):
-            st.session_state["confirm_reset"] = True
-            st.rerun()
-        return
-    st.warning(NEW_CONVERSATION_CONFIRM)
-    yes, cancel = st.columns(2)
-    if yes.button("Yes, start over", type="primary"):
-        reset_conversation(st.session_state)
-        st.session_state["confirm_reset"] = False
-        log_event(logger, "conversation_reset")
-        st.rerun()
-    if cancel.button("Cancel"):
-        st.session_state["confirm_reset"] = False
-        st.rerun()
-
-
 KNOWLEDGE_LEVELS = {"Beginner": "beginner", "Intermediate": "intermediate"}
 RISK_LEVELS = {"Conservative": "conservative", "Moderate": "moderate", "Aggressive": "aggressive"}
 GOAL_NOTE_MAX_CHARS = 200
@@ -129,7 +108,7 @@ def render_sidebar() -> None:
         st.title("Finnie")
         st.caption("AI Finance Assistant")
         render_profile()
-        render_new_conversation()
+        components.render_new_conversation("sidebar")
         with st.expander("About Finnie"):
             st.write(ABOUT_TEXT)
 

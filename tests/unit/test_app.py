@@ -110,7 +110,7 @@ def test_chat_question_gets_an_agent_answer(isolated_env):
     assert not app.exception
     texts = [m.value for m in app.markdown]
     assert "What is compound interest?" in texts and "Compound interest is interest on interest." in texts
-    assert "Finance Q&A" in [c.value for c in app.caption]
+    assert ":blue-badge[Finance Q&A]" in [m.value for m in app.markdown]
     assert any("Not personalized advice." in w.value for w in app.warning)
 
 
@@ -271,3 +271,151 @@ def test_unreadable_answer_to_the_risk_question_is_asked_again(isolated_env):
     isolated_env.setattr(factory, "build_services", lambda settings: services)
     app = chatted_app(isolated_env, ("Plan my savings", "dunno"))
     assert RISK_REASK in [m.value for m in app.markdown] and len(services.workflow.requests) == 1
+
+
+# --- Story 7.1: the chat interface (front-end spec §4.1) ---
+
+
+def chat_tab_button(app, label):
+    return next(b for b in app.tabs[0].button if b.label == label)
+
+
+class RichWorkflow(FakeWorkflow):
+    """Answers with everything an answer can carry: labels, a disclaimer and sources."""
+
+    def __init__(self, agent=AgentName.MARKET):
+        super().__init__()
+        self.agent = agent
+
+    async def run(self, request):
+        from datetime import date, datetime, timedelta, timezone
+
+        from src.core.freshness import DataSource, make_label
+
+        self.requests.append(request)
+        now = datetime(2026, 10, 15, 14, 0, tzinfo=timezone.utc)
+        labels = [
+            make_label(DataSource.LIVE, now, date(2026, 10, 14), now),
+            make_label(DataSource.CACHE, now - timedelta(minutes=12), date(2026, 10, 14), now),
+            make_label(DataSource.SAMPLE, None, None, now),
+        ]
+        return AgentResponse(
+            agent=self.agent, answer="VTI slipped yesterday.", response_type="advice", labels=labels,
+            disclaimer="Not personalized advice.",
+            sources=[Source(title="Index Funds", url="https://www.investor.gov/index", source_name="Investor.gov (U.S. SEC)", category="ETFs & Mutual Funds")],
+        )
+
+
+def rich_app(isolated_env, workflow=None, question="How is VTI doing?"):
+    services = FakeServices()
+    services.workflow = workflow or RichWorkflow()
+    isolated_env.setattr(factory, "build_services", lambda settings: services)
+    return chatted_app(isolated_env, (question,)), services
+
+
+def test_first_visit_shows_a_welcome_and_example_questions(isolated_env):
+    for name, value in KEYS.items():
+        isolated_env.setenv(name, value)
+    app = run_app()
+    assert any(m.value.startswith("Hi, I'm Finnie.") for m in app.markdown)
+    examples = [b.label for b in app.tabs[0].button if b.key and b.key.startswith("example_")]
+    assert examples == [
+        "What is compound interest?",
+        "How much should I save each month for a $20,000 goal?",
+        "What's the difference between a 401(k) and a Roth IRA?",
+        "How is VTI doing today?",
+    ]
+
+
+def test_clicking_an_example_asks_that_question_and_removes_the_welcome(isolated_env):
+    services = FakeServices()
+    isolated_env.setattr(factory, "build_services", lambda settings: services)
+    for name, value in KEYS.items():
+        isolated_env.setenv(name, value)
+    app = run_app()
+    next(b for b in app.tabs[0].button if b.key == "example_0").click().run()
+    assert not app.exception and [r.message for r in services.workflow.requests] == ["What is compound interest?"]
+    texts = [m.value for m in app.markdown]
+    assert "What is compound interest?" in texts and "Compound interest is interest on interest." in texts
+    assert not any(m.value.startswith("Hi, I'm Finnie.") for m in app.markdown)  # no welcome once chatting
+    assert not [b for b in app.tabs[0].button if b.key and b.key.startswith("example_")]
+
+
+def test_each_answer_shows_the_agent_that_wrote_it(isolated_env):
+    app, _ = rich_app(isolated_env, RichWorkflow(AgentName.TAX))
+    assert ":blue-badge[Tax Education]" in [m.value for m in app.markdown]
+
+
+def test_finnies_own_replies_are_badged_finnie(isolated_env):
+    app, _ = rich_app(isolated_env, RichWorkflow(agent=None))
+    assert ":blue-badge[Finnie]" in [m.value for m in app.markdown]
+
+
+def test_freshness_labels_sit_under_their_answer_with_colored_dots(isolated_env):
+    app, _ = rich_app(isolated_env)
+    labels = [c.value for c in app.caption if "●" in c.value]
+    assert labels == [
+        ":green[●] Live · as of Oct 14 close",
+        ":orange[●] Cached · updated 12 min ago · as of Oct 14 close",
+        ":gray[●] Sample data · not real prices",
+    ]
+    markdown = [m.value for m in app.markdown]
+    assert markdown.index("VTI slipped yesterday.") < len(markdown)  # the answer is there; labels follow it as captions
+
+
+def test_the_disclaimer_is_a_separate_callout_not_part_of_the_answer(isolated_env):
+    app, _ = rich_app(isolated_env)
+    assert [w.value for w in app.warning] == ["Not personalized advice."]
+    assert "Not personalized advice." not in [m.value for m in app.markdown]
+
+
+def test_sources_are_in_a_collapsed_section_under_the_answer(isolated_env):
+    app, _ = rich_app(isolated_env)
+    sources = [e for e in app.expander if e.label == "Sources"]
+    assert len(sources) == 1 and sources[0].proto.expanded is False
+    assert "[Index Funds](https://www.investor.gov/index)" in sources[0].markdown[0].value
+
+
+def test_answers_without_sources_labels_or_disclaimer_show_none_of_them(isolated_env):
+    class Bare(FakeWorkflow):
+        async def run(self, request):
+            return AgentResponse(agent=AgentName.FINANCE_QA, answer="Plain answer.")
+
+    app, _ = rich_app(isolated_env, Bare(), "Hello")
+    assert "Plain answer." in [m.value for m in app.markdown]
+    assert not app.warning and not [e for e in app.expander if e.label == "Sources"]
+    assert not [c for c in app.caption if "●" in c.value]
+
+
+def test_a_loading_indicator_shows_while_the_answer_is_prepared(isolated_env, monkeypatch):
+    shown = []
+    real_spinner = st.spinner
+
+    def recording_spinner(text="", **kwargs):
+        shown.append(text)
+        return real_spinner(text, **kwargs)
+
+    monkeypatch.setattr(st, "spinner", recording_spinner)
+    rich_app(isolated_env)
+    assert shown == ["Finnie is thinking…"]
+
+
+def test_new_conversation_is_available_in_the_chat_tab(isolated_env):
+    for name, value in KEYS.items():
+        isolated_env.setenv(name, value)
+    app = run_app()
+    assert chat_tab_button(app, "New conversation").disabled  # nothing to clear yet
+    app, _ = rich_app(isolated_env)
+    assert not chat_tab_button(app, "New conversation").disabled
+    chat_tab_button(app, "New conversation").click().run()
+    assert any("Start a new conversation?" in w.value for w in app.tabs[0].warning)
+    chat_tab_button(app, "Yes, start over").click().run()
+    assert "How is VTI doing?" not in [m.value for m in app.markdown]
+    assert any(m.value.startswith("Hi, I'm Finnie.") for m in app.markdown)  # back to the first-visit state
+
+
+def test_cancelling_in_the_chat_tab_keeps_the_conversation(isolated_env):
+    app, _ = rich_app(isolated_env)
+    chat_tab_button(app, "New conversation").click().run()
+    chat_tab_button(app, "Cancel").click().run()
+    assert "How is VTI doing?" in [m.value for m in app.markdown] and not app.tabs[0].warning[1:]
