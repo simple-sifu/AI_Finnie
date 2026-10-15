@@ -135,9 +135,10 @@ def main() -> None:
         chat.render(services, runner, settings.chat.history_turns, settings.chat.timeout_s + 15)
     with tabs[1]:
         portfolio.render(services, runner, settings.chat.timeout_s + 15)
-    for tab, module in zip(tabs[2:], list(TABS.values())[2:]):
-        with tab:
-            module.render()
+    with tabs[2]:
+        markets.render(services, runner, settings.market.tickers, settings.chat.timeout_s + 15)
+    with tabs[3]:
+        goals.render()
 
 
 main()

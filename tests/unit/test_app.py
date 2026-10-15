@@ -64,7 +64,7 @@ def test_app_starts_with_four_tabs(isolated_env):
     app = run_app()
     assert not app.exception
     assert [tab.label for tab in app.tabs] == ["Chat", "Portfolio", "Markets", "Goals"]
-    assert len(app.info) == 3  # placeholders for Portfolio, Markets and Goals
+    assert len(app.info) == 2  # the Portfolio empty state and the Goals placeholder; Markets is live (Story 7.3)
     assert len(app.chat_input) == 1  # Chat is live (Story 5.1)
     assert app.sidebar.title[0].value == "Finnie"
     assert not app.error
@@ -397,7 +397,8 @@ def test_a_loading_indicator_shows_while_the_answer_is_prepared(isolated_env, mo
 
     monkeypatch.setattr(st, "spinner", recording_spinner)
     rich_app(isolated_env)
-    assert shown == ["Finnie is thinking…"]
+    assert "Finnie is thinking…" in shown  # while the answer is prepared
+    assert set(shown) <= {"Finnie is thinking…", "Loading prices…"}  # the Markets tab has its own spinner
 
 
 def test_new_conversation_is_available_in_the_chat_tab(isolated_env):
