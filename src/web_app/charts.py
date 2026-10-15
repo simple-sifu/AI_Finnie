@@ -56,3 +56,22 @@ def allocation_bar(allocation: dict[str, float]) -> go.Figure | None:
     fig.update_xaxes(title_text="Share of your portfolio (%)", range=[0, max(percents) * 1.2 + 5])
     fig.update_yaxes(title_text="Type of investment", autorange="reversed")  # largest at the top
     return _layout(fig, "Your mix of investments")
+
+
+TREND_DAYS = 63  # about 3 months of trading days
+TREND_COLOR = PALETTE[1]
+
+
+def price_trend(symbol: str, points: list[tuple[str, float]], days: int = TREND_DAYS) -> go.Figure | None:
+    """A line chart of a ticker's recent closing prices. `points` are (ISO date, close), oldest first."""
+    recent = points[-days:]
+    if len(recent) < 2:
+        return None
+    dates, closes = [d for d, _ in recent], [c for _, c in recent]
+    fig = go.Figure(go.Scatter(
+        x=dates, y=closes, mode="lines", line={"color": TREND_COLOR, "width": 2},
+        hovertemplate="%{x|%b %d, %Y}: $%{y:,.2f}<extra></extra>",
+    ))
+    fig.update_xaxes(title_text="Date")
+    fig.update_yaxes(title_text="Closing price ($)", tickprefix="$")
+    return _layout(fig, f"{symbol}: last 3 months")
