@@ -22,6 +22,16 @@ _STREAMLIT_COLORS = {"green": "green", "amber": "orange", "grey": "gray"}
 NEW_CONVERSATION_CONFIRM = "Start a new conversation? Your current chat and profile will be cleared."
 
 
+def escape_markdown_dollars(text: str) -> str:
+    """Escape ``$`` so Streamlit markdown does not treat currency as LaTeX math."""
+    return text.replace("$", "\\$")
+
+
+def render_answer(text: str) -> None:
+    """Agent answer text with currency and percentages shown literally."""
+    st.markdown(escape_markdown_dollars(text))
+
+
 def agent_badge(agent: AgentName | None) -> None:
     """A small label above an answer naming the agent that wrote it ("Finnie" for Finnie's own replies)."""
     st.markdown(f":blue-badge[{agent.display_name if agent else 'Finnie'}]")

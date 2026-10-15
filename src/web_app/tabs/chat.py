@@ -43,7 +43,10 @@ def render_message(turn: ChatTurn, response: AgentResponse | None = None) -> Non
     with st.chat_message(turn.role):
         if response is not None:
             components.agent_badge(response.agent)
-        st.markdown(turn.content)
+        if turn.role == "assistant" and response is not None:
+            components.render_answer(turn.content)
+        else:
+            st.markdown(turn.content)
         if response is None:
             return
         components.freshness_labels(response.labels)

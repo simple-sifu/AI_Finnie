@@ -198,7 +198,7 @@ def render_result(response: AgentResponse) -> None:
         render_metrics(metrics)
         components.freshness_labels(response.labels)
         render_charts(response)
-        st.markdown(response.answer)
+        components.render_answer(response.answer)
         if response.disclaimer:
             components.disclaimer_callout(response.disclaimer)
 
