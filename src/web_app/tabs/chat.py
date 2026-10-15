@@ -70,7 +70,7 @@ def render(services=None, runner=None, history_turns: int = 10, timeout: float =
     if not conversation.exchanges and not queued:
         st.markdown(WELCOME)
         for i, example in enumerate(EXAMPLE_QUESTIONS):
-            st.button(example, key=f"example_{i}", on_click=_ask_example, args=(example,), use_container_width=True)
+            st.button(example, key=f"example_{i}", on_click=_ask_example, args=(example,), width="stretch")
 
     for exchange in conversation.exchanges:
         render_message(exchange.question)
