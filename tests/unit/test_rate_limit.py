@@ -108,3 +108,32 @@ def test_corrupt_state_file_starts_fresh(tmp_path, clock):
 
 def test_eastern_midnight_after():
     assert eastern_midnight_after(T0) == datetime(2026, 10, 16, 4, 0, tzinfo=timezone.utc)
+
+
+# --- MonthlyBudget (Story 8.5) ---
+
+
+async def test_monthly_budget_counts_and_refuses(tmp_path, clock):
+    from src.core.rate_limit import MonthlyBudget
+
+    b = MonthlyBudget(tmp_path / "serp.json", per_month=2, clock=clock)
+    assert await b.acquire() and await b.acquire()
+    assert await b.acquire() is False and b.remaining() == 0
+
+
+async def test_monthly_budget_resets_in_a_new_month_and_survives_restart(tmp_path, clock):
+    from src.core.rate_limit import MonthlyBudget
+
+    path = tmp_path / "serp.json"
+    await MonthlyBudget(path, 100, clock=clock).acquire()
+    assert MonthlyBudget(path, 100, clock=clock).remaining() == 99
+    clock.now = datetime(2026, 11, 1, 4, 0, tzinfo=timezone.utc)  # Nov 1, midnight US Eastern
+    assert MonthlyBudget(path, 100, clock=clock).remaining() == 100
+
+
+def test_monthly_budget_mark_exhausted(tmp_path, clock):
+    from src.core.rate_limit import MonthlyBudget
+
+    b = MonthlyBudget(tmp_path / "serp.json", 100, clock=clock)
+    b.mark_exhausted()
+    assert b.remaining() == 0
