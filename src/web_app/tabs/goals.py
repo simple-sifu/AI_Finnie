@@ -74,7 +74,7 @@ def render_plan(plan: GoalPlan, risk: str, disclaimer: str) -> None:
         )
     figure = charts.goal_projection(plan)
     if figure is not None:
-        st.plotly_chart(figure, width="stretch", key="goal_projection")
+        components.chart_with_table(figure, charts.goal_projection_table(plan), "goal_projection")
     components.disclaimer_callout(disclaimer)
 
 

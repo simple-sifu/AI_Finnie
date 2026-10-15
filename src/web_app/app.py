@@ -127,6 +127,7 @@ def main() -> None:
             "articles. Other features still work. (Details are in the log.)"
         )
 
+    components.inject_responsive_css()
     render_sidebar()
     runner = get_runner()
     services = get_services(settings)

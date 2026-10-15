@@ -168,9 +168,11 @@ def render_charts(response: AgentResponse) -> None:
     bar = charts.allocation_bar(metrics.allocation_by_type)
     left, right = st.columns(2)
     if pie is not None:
-        left.plotly_chart(pie, width="stretch", key="portfolio_pie")
+        with left:
+            components.chart_with_table(pie, charts.holdings_pie_table(response.data["holdings"]), "portfolio_pie")
     if bar is not None:
-        right.plotly_chart(bar, width="stretch", key="portfolio_bar")
+        with right:
+            components.chart_with_table(bar, charts.allocation_table(metrics.allocation_by_type), "portfolio_bar")
 
 
 def render_result(response: AgentResponse) -> None:

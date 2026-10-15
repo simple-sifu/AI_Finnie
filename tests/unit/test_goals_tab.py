@@ -263,3 +263,13 @@ def test_a_retirement_length_goal_can_be_entered(env):
     app = planned(run_app(), "Moderate", 1_000_000.0, date(2061, 10, 15), 25000.0)
     assert not app.exception and metrics(app)["Save each month"].startswith("$")
     assert "Your path to $1,000,000" in app.get("plotly_chart")[0].proto.spec
+
+
+def test_the_projection_chart_has_a_show_as_table_switch_with_the_same_data(env):
+    app = planned(run_app())
+    toggle = next(t for t in goals(app).toggle if t.key == "goal_projection_table")
+    assert toggle.label == "Show as table" and not toggle.value and not goals(app).dataframe
+    toggle.set_value(True).run()
+    table = goals(app).dataframe[0].value
+    plan = plan_goal(20000, 3000, 48, 0.05)
+    assert list(table["Projected balance"]) == [f"${b:,.2f}" for _, b in plan.schedule] and set(table["Goal"]) == {"$20,000.00"}
