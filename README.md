@@ -114,6 +114,16 @@ streamlit run src/web_app/app.py
 
 `pytest` reports test coverage and fails if it drops below 80% (PRD D-13). Tests never use your real API keys.
 
+### Docker (optional)
+
+With [Docker](https://docs.docker.com/get-docker/) installed and `.env` configured:
+
+```bash
+docker compose up --build
+```
+
+Then open http://localhost:8501. API keys come from `.env`; runtime cache is stored in a Docker volume. See [`docs/deployment.md`](docs/deployment.md) for `docker run` and the full artifact checklist (Story 10.3).
+
 ### Running the tests
 
 ```bash
@@ -273,8 +283,11 @@ ai_finance_assistant/
 ├── tests/
 ├── scripts/             # benchmark.py (NFR13)
 ├── docs/
+├── Dockerfile           # local container (Story 10.3)
+├── docker-compose.yml
 ├── config.yaml
 ├── requirements.txt
+├── .env.example
 └── README.md
 ```
 
@@ -287,6 +300,7 @@ ai_finance_assistant/
 - [`docs/uat-script.md`](docs/uat-script.md) and [`docs/uat-results.md`](docs/uat-results.md): user acceptance script and results (Story 9.3)
 - [`docs/benchmarks.md`](docs/benchmarks.md): NFR13 performance benchmarks (Story 9.4)
 - [`docs/demo-video-script.md`](docs/demo-video-script.md) and [`docs/demo-video.md`](docs/demo-video.md): demo recording script and submission link checklist (Story 10.2)
+- [`docs/deployment.md`](docs/deployment.md): deployment artifacts and Docker instructions (Story 10.3)
 - [`docs/sources/`](docs/sources/): source documents the PRD was built from
 
 ## Roadmap
