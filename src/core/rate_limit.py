@@ -121,3 +121,56 @@ def eastern_midnight_after(now: datetime) -> datetime:
     local = now.astimezone(US_EASTERN)
     tomorrow = (local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
     return tomorrow.astimezone(timezone.utc)
+
+
+class MonthlyBudget:
+    """A per-calendar-month request budget, saved to disk (SerpApi news, Story 8.5).
+
+    Months are counted in US Eastern time. SerpApi's own month may start on a
+    different day (it follows the plan cycle), so the cap is kept below the
+    plan's allowance and an "out of searches" reply also blocks the month.
+    """
+
+    def __init__(self, state_file: Path, per_month: int, clock: Clock = utc_now, zone: ZoneInfo = US_EASTERN):
+        self.state_file = state_file
+        self.per_month = per_month
+        self.clock = clock
+        self.zone = zone
+        self._lock = asyncio.Lock()
+
+    def _month(self) -> str:
+        return self.clock().astimezone(self.zone).strftime("%Y-%m")
+
+    def _load(self) -> dict:
+        try:
+            state = json.loads(self.state_file.read_text())
+        except (OSError, ValueError):
+            state = {}
+        if state.get("month") != self._month():
+            state = {"month": self._month(), "count": 0}
+        return state
+
+    def _save(self, state: dict) -> None:
+        self.state_file.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=self.state_file.parent, suffix=".tmp")
+        with os.fdopen(fd, "w") as f:
+            json.dump(state, f)
+        os.replace(tmp, self.state_file)
+
+    def remaining(self) -> int:
+        return max(0, self.per_month - self._load()["count"])
+
+    async def acquire(self) -> bool:
+        """Reserve one request. Returns False if this month's budget is used up."""
+        async with self._lock:
+            state = self._load()
+            if state["count"] >= self.per_month:
+                return False
+            state["count"] += 1
+            self._save(state)
+            return True
+
+    def mark_exhausted(self) -> None:
+        state = self._load()
+        state["count"] = self.per_month
+        self._save(state)
