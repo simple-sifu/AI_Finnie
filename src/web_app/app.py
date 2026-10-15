@@ -90,10 +90,45 @@ def render_new_conversation() -> None:
         st.rerun()
 
 
+KNOWLEDGE_LEVELS = {"Beginner": "beginner", "Intermediate": "intermediate"}
+RISK_LEVELS = {"Conservative": "conservative", "Moderate": "moderate", "Aggressive": "aggressive"}
+GOAL_NOTE_MAX_CHARS = 200
+
+
+def _label(options: dict[str, str], value: str | None) -> str | None:
+    return next((label for label, key in options.items() if key == value), None)
+
+
+def render_profile() -> None:
+    """The session profile (Story 5.5, front-end spec §2). It lasts only for this session (D-15).
+
+    The widgets are built from the conversation's profile on every run, so a risk level
+    the user gives in the chat shows up here, and "New conversation" resets them.
+    """
+    profile = get_conversation(st.session_state).profile
+    st.subheader("Your profile")
+    level = st.selectbox(
+        "Knowledge level", list(KNOWLEDGE_LEVELS), index=list(KNOWLEDGE_LEVELS.values()).index(profile.knowledge_level),
+        help="Beginner explains everything from scratch; Intermediate assumes the basics.",
+    )
+    risk_label = _label(RISK_LEVELS, profile.risk_tolerance)
+    risk = st.selectbox(
+        "Risk tolerance", list(RISK_LEVELS), index=None if risk_label is None else list(RISK_LEVELS).index(risk_label),
+        placeholder="Not set yet",
+        help="How much ups and downs in your investments you can handle. Goal planning uses it.",
+    )
+    goal = st.text_input("Goal (optional)", value=profile.goal_note or "", max_chars=GOAL_NOTE_MAX_CHARS,
+                         placeholder="e.g. a house down payment in 5 years")
+    profile.knowledge_level = KNOWLEDGE_LEVELS[level]
+    profile.risk_tolerance = RISK_LEVELS.get(risk) if risk else None
+    profile.goal_note = goal.strip() or None
+
+
 def render_sidebar() -> None:
     with st.sidebar:
         st.title("Finnie")
         st.caption("AI Finance Assistant")
+        render_profile()
         render_new_conversation()
         with st.expander("About Finnie"):
             st.write(ABOUT_TEXT)

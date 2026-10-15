@@ -13,7 +13,7 @@ import streamlit as st
 from src.agents.base import AGENT_FAILED
 from src.core.models import AgentResponse, ChatTurn, format_sources
 from src.utils.logging import get_logger, log_event
-from src.workflow.conversation import get_conversation
+from src.workflow.conversation import get_conversation, plan_turn
 
 logger = get_logger(__name__)
 
@@ -49,12 +49,16 @@ def render(services=None, runner=None, history_turns: int = 10, timeout: float =
     if not question:
         return
     _render(ChatTurn(role="user", content=question), None)
-    with st.spinner("Finnie is thinking…"):
-        try:
-            response = runner.run(services.workflow.run(conversation.request(question, history_turns)), timeout)
-        except Exception as exc:  # the workflow never raises, but the runner or loop might
-            log_event(logger, "error", level=logging.ERROR, kind="chat_failed", detail=type(exc).__name__)
-            response = AgentResponse(agent=None, answer=AGENT_FAILED, error=True)
-    conversation.add(question, response)
+    plan = plan_turn(conversation, question)  # may store a risk level the user just gave us
+    if plan.reply is not None:
+        response = plan.reply
+    else:
+        with st.spinner("Finnie is thinking…"):
+            try:
+                response = runner.run(services.workflow.run(conversation.request(plan.message, history_turns)), timeout)
+            except Exception as exc:  # the workflow never raises, but the runner or loop might
+                log_event(logger, "error", level=logging.ERROR, kind="chat_failed", detail=type(exc).__name__)
+                response = AgentResponse(agent=None, answer=AGENT_FAILED, error=True)
+    conversation.add(question, response, asked=plan.message)
     # Re-render the whole page so the sidebar (New conversation) sees the updated chat.
     st.rerun()
