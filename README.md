@@ -91,6 +91,9 @@ python -m src.core.config        # checks the configuration; prints "Configurati
 
 # 5. Run the tests with coverage
 pytest
+
+# 6. Start the app (opens at http://localhost:8501)
+streamlit run src/web_app/app.py
 ```
 
 `pytest` reports test coverage and fails if it drops below 80% (PRD D-13). Tests never use your real API keys.
@@ -101,7 +104,7 @@ pytest
 - **Settings** are in `config.yaml`: model, cache times, tickers, limits and the disclaimer text.
 - **Overrides:** environment variables win over `config.yaml`. `OPENAI_MODEL`, `MARKET_DATA_MODE` (`live` or `mock`) and `QUOTE_CACHE_TTL_SECONDS` have their own names. Any other setting can be overridden with `FINNIE_<SECTION>__<KEY>`, for example `FINNIE_MARKET__DAILY_LIMIT=10`.
 
-App start-up instructions will be added with the app skeleton (Story 1.7).
+If a required key is missing, the app shows which one instead of starting. The tabs show placeholders until each feature is built.
 
 ## Project structure
 
