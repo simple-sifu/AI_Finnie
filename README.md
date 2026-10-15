@@ -286,6 +286,7 @@ ai_finance_assistant/
 - [`docs/prd.md`](docs/prd.md): product requirements, epics and decision log
 - [`docs/uat-script.md`](docs/uat-script.md) and [`docs/uat-results.md`](docs/uat-results.md): user acceptance script and results (Story 9.3)
 - [`docs/benchmarks.md`](docs/benchmarks.md): NFR13 performance benchmarks (Story 9.4)
+- [`docs/demo-video-script.md`](docs/demo-video-script.md) and [`docs/demo-video.md`](docs/demo-video.md): demo recording script and submission link checklist (Story 10.2)
 - [`docs/sources/`](docs/sources/): source documents the PRD was built from
 
 ## Roadmap
