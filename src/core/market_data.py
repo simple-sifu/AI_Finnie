@@ -17,13 +17,13 @@ import logging
 import re
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timezone
-from enum import Enum
 from pathlib import Path
 from typing import Protocol
 
 import httpx
 
-from src.core.cache import DEFAULT_CACHE_DIR, DiskCache
+from src.core.cache import DEFAULT_CACHE_DIR, DiskCache, utc_now
+from src.core.freshness import DataLabel, DataSource, make_label
 from src.core.rate_limit import RequestBudget, Sleep
 from src.utils.logging import get_logger, log_event
 
@@ -172,14 +172,6 @@ class AlphaVantageClient:
 # --- Cache, limits and fallbacks (Stories 8.2 and 8.3) -----------------------
 
 
-class DataSource(str, Enum):
-    LIVE = "live"  # fetched from Alpha Vantage just now
-    CACHE = "cache"  # from the cache, still within its TTL
-    STALE = "stale"  # from an expired cache entry, because live data was unavailable
-    SAMPLE = "sample"  # mock data (Story 8.6), the last resort before "unavailable"
-    UNAVAILABLE = "unavailable"  # nothing available at all
-
-
 @dataclass(frozen=True)
 class Unavailable:
     """No live, cached or sample data. Shown as "price unavailable" (D-41)."""
@@ -199,6 +191,16 @@ class MarketResult:
     @property
     def from_cache(self) -> bool:
         return self.source in (DataSource.CACHE, DataSource.STALE)
+
+    def label(self, now: datetime | None = None) -> DataLabel | None:
+        """The freshness label to show with this result (Story 8.4).
+
+        None when there are no figures to label: an unknown ticker or no data at all.
+        """
+        if isinstance(self.value, (NotFound, Unavailable)):
+            return None
+        as_of = getattr(self.value, "as_of", None)
+        return make_label(self.source, self.fetched_at, as_of, now or utc_now())
 
 
 class MockProvider(Protocol):
